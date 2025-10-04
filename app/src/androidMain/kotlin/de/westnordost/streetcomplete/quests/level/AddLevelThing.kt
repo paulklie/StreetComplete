@@ -19,7 +19,12 @@ class AddLevelThing : OsmElementQuestType<String>, AndroidQuest {
 
     /* only nodes because ways/relations are not likely to be floating around freely in a mall
      * outline */
-    private val filter by lazy { "nodes with !level".toElementFilterExpression() }
+    private val filter by lazy { """
+        nodes with
+        !level
+        and indoor != no
+        and location != outdoor
+    """.trimIndent().toElementFilterExpression() }
 
     /* including any kind of public transport station because even really large bus stations feel
      * like small airport terminals, like Mo Chit 2 in Bangkok*/
