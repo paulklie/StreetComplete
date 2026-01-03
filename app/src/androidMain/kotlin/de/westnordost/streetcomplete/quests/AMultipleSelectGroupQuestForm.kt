@@ -49,13 +49,12 @@ abstract class AMultipleSelectGroupQuestForm<T, I : T> : AbstractOsmQuestForm<Se
                 }
                 MultipleSelectGroup(
                     options = items,
-                    onSelectionChange = { option: I -> // Specify the type of 'option' here
+                    onSelectionChange = { option: I ->
                         selectedOptions.value = if (selectedOptions.value.contains(option)) {
                             selectedOptions.value - option
                         } else {
                             selectedOptions.value + option
                         }
-                        Log.d("MyTag", "Selected options: " + selectedOptions.value.toString())
                         checkIsFormComplete()
                     },
                     selectedOptions = selectedOptions.value,
