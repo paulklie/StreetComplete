@@ -1,6 +1,7 @@
 package de.westnordost.streetcomplete.screens.main.controls
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.width
@@ -13,16 +14,18 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.westnordost.streetcomplete.ui.common.ZoomInIcon
 import de.westnordost.streetcomplete.ui.common.ZoomOutIcon
-import androidx.compose.ui.tooling.preview.Preview
 
 /** Combined control for zooming in and out */
 @Composable
 fun ZoomButtons(
     onZoomIn: () -> Unit,
     onZoomOut: () -> Unit,
+    zoom: (Float) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: ButtonColors = ButtonDefaults.buttonColors(
@@ -37,7 +40,16 @@ fun ZoomButtons(
         border = BorderStroke(1.dp, MaterialTheme.colors.onSurface.copy(alpha = 0.12f)),
         elevation = 4.dp
     ) {
-        Column(Modifier.width(IntrinsicSize.Min)) {
+        Column(
+            Modifier
+                .width(IntrinsicSize.Min)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures { change, dragAmount ->
+                        change.consume()
+                        zoom(-dragAmount / 30)
+                    }
+                }
+        ) {
             IconButton(onClick = onZoomIn, enabled = enabled) { ZoomInIcon() }
             Divider()
             IconButton(onClick = onZoomOut, enabled = enabled) { ZoomOutIcon() }
@@ -48,5 +60,5 @@ fun ZoomButtons(
 @Preview
 @Composable
 private fun PreviewZoomButtons() {
-    ZoomButtons(onZoomIn = {}, onZoomOut = {})
+    ZoomButtons(onZoomIn = {}, onZoomOut = {}, zoom = {})
 }

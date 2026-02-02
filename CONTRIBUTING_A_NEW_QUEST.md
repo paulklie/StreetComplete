@@ -470,6 +470,8 @@ Please make sure that the images do not take too much disk space. Most useful wa
 
 [GIMP](https://gimp.org/) allows such previews while saving JPG files, and there are also online tools like [squoosh](https://squoosh.app/) which allow for quick visual comparison if you prefer that.
 
+Please try to keep the images small (consider they already make up more than half of the APK size), and consider using vector graphics instead of photos where it's reasonable.
+
 After adding a photo, remember to update [the credits file](app/src/androidMain/res/authors.txt) (different to the one for icons).
 
 ## Resurvey

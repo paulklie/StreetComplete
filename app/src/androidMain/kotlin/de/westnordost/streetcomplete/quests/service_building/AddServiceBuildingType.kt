@@ -4,8 +4,11 @@ import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.osm.geometry.ElementGeometry
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmFilterQuestType
 import de.westnordost.streetcomplete.osm.Tags
+import de.westnordost.streetcomplete.data.quest.AndroidQuest
+import de.westnordost.streetcomplete.resources.Res
+import de.westnordost.streetcomplete.resources.default_disabled_msg_ee
 
-class AddServiceBuildingType : OsmFilterQuestType<ServiceBuildingType>() {
+class AddServiceBuildingType : OsmFilterQuestType<ServiceBuildingType>(), AndroidQuest {
 
     override val elementFilter = """
         ways, relations with
@@ -22,7 +25,7 @@ class AddServiceBuildingType : OsmFilterQuestType<ServiceBuildingType>() {
     override val changesetComment = "Add service building type"
     override val wikiLink = "Tag:building=service"
     override val icon = R.drawable.ic_quest_service_building
-    override val defaultDisabledMessage: Int = R.string.default_disabled_msg_ee
+    override val defaultDisabledMessage = Res.string.default_disabled_msg_ee
 
     override fun getTitle(tags: Map<String, String>) = R.string.quest_service_building_type_title
 

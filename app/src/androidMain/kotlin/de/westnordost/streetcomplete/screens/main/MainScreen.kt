@@ -1,6 +1,10 @@
 package de.westnordost.streetcomplete.screens.main
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -9,6 +13,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
@@ -35,7 +41,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -57,6 +66,7 @@ import de.westnordost.streetcomplete.screens.main.controls.MapButton
 import de.westnordost.streetcomplete.screens.main.controls.MessagesButton
 import de.westnordost.streetcomplete.screens.main.controls.OverlaySelectionButton
 import de.westnordost.streetcomplete.screens.main.controls.PointerPinButton
+import de.westnordost.streetcomplete.screens.main.controls.QuickSettingsDropdown
 import de.westnordost.streetcomplete.screens.main.controls.ScaleBar
 import de.westnordost.streetcomplete.screens.main.controls.StarsCounter
 import de.westnordost.streetcomplete.screens.main.controls.ZoomButtons
@@ -76,6 +86,7 @@ import de.westnordost.streetcomplete.screens.tutorial.OverlaysTutorialScreen
 import de.westnordost.streetcomplete.screens.user.UserActivity
 import de.westnordost.streetcomplete.ui.common.AnimatedScreenVisibility
 import de.westnordost.streetcomplete.ui.common.LargeCreateIcon
+import de.westnordost.streetcomplete.ui.common.QuickSettingsIcon
 import de.westnordost.streetcomplete.ui.common.StopRecordingIcon
 import de.westnordost.streetcomplete.ui.common.UndoIcon
 import de.westnordost.streetcomplete.ui.ktx.dir
@@ -94,6 +105,7 @@ fun MainScreen(
     editHistoryViewModel: EditHistoryViewModel,
     onClickZoomIn: () -> Unit,
     onClickZoomOut: () -> Unit,
+    onZoom: (Float) -> Unit,
     onClickCompass: () -> Unit,
     onClickLocation: () -> Unit,
     onClickLocationPointer: () -> Unit,
@@ -149,11 +161,14 @@ fun MainScreen(
 
     val isRequestingLogin by viewModel.isRequestingLogin.collectAsState()
 
+    val showQuickSettings by viewModel.showQuickSettings.collectAsState()
+    var showQuickSettingsMenu by remember { mutableStateOf(false) }
+
     var showOverlaysDropdown by remember { mutableStateOf(false) }
     var showOverlaysTutorial by remember { mutableStateOf(false) }
     var showIntroTutorial by remember { mutableStateOf(false) }
     var showTeamModeWizard by remember { mutableStateOf(false) }
-    var showMainMenuDialog by remember { mutableStateOf(false) }
+    var showMainMenuDialog by viewModel.showMainMenuDialog
     var shownMessage by remember { mutableStateOf<Message?>(null) }
     val showEditHistorySidebar by editHistoryViewModel.isShowingSidebar.collectAsState()
 
@@ -245,7 +260,8 @@ fun MainScreen(
                         .defaultMinSize(minWidth = 96.dp)
                         .clickable(null, null) { viewModel.toggleShowingCurrentWeek() },
                     isCurrentWeek = isShowingStarsCurrentWeek,
-                    showProgress = isUploadingOrDownloading
+                    showProgress = isUploadingOrDownloading,
+                    hasUnsyncedChanges = unsyncedEditsCount != 0
                 )
             }
 
@@ -306,7 +322,8 @@ fun MainScreen(
                         if (showZoomButtons) {
                             ZoomButtons(
                                 onZoomIn = onClickZoomIn,
-                                onZoomOut = onClickZoomOut
+                                onZoomOut = onClickZoomOut,
+                                zoom = onZoom
                             )
                         }
                         LocationStateButton(
@@ -344,6 +361,21 @@ fun MainScreen(
                             .padding(4.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        if (showQuickSettings) {
+                        Box{
+                            MapButton(
+                                onClick = { showQuickSettingsMenu = !showQuickSettingsMenu },
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                QuickSettingsIcon()
+                            }
+                            QuickSettingsDropdown(
+                                expanded = showQuickSettingsMenu,
+                                onDismissRequest = { showQuickSettingsMenu = false },
+                                viewModel = viewModel
+                            )
+                        }
+                    }
                         if (isRecordingTracks) {
                             MapButton(
                                 onClick = onClickStopTrackRecording,
@@ -418,6 +450,7 @@ fun MainScreen(
     }
 
     if (showMainMenuDialog) {
+        val requester = remember { FocusRequester() } // necessary for receiving key event
         MainMenuDialog(
             onDismissRequest = { showMainMenuDialog = false },
             onClickProfile = { context.startActivity(Intent(context, UserActivity::class.java)) },
@@ -431,7 +464,18 @@ fun MainScreen(
             indexInTeam = if (isTeamMode) indexInTeam else null,
             unsyncedEditsCount = if (!isAutoSync) unsyncedEditsCount else null,
             isUploadingOrDownloading = isUploadingOrDownloading,
+            modifier = Modifier
+                .focusRequester(requester)
+                .focusable()
+                .onKeyEvent {
+                    if (it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_MENU && it.nativeKeyEvent.action == KeyEvent.ACTION_UP){
+                        context.startActivity(Intent(context, SettingsActivity::class.java))
+                        showMainMenuDialog = false
+                    }
+                    false
+                }
         )
+        LaunchedEffect(Unit) { requester.requestFocus() }
     }
 
     urlConfig?.let { config ->
@@ -448,6 +492,9 @@ fun MainScreen(
         LastUploadErrorEffect(lastError = error, onReportError = ::sendErrorReport)
     }
     lastCrashReport?.let { report ->
+        val clip = ClipData.newPlainText("SCEE error message", report)
+        (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
+        context.toast("crash report copied to clipboard")
         LastCrashEffect(lastReport = report, onReport = { context.sendErrorReportEmail(it) })
     }
 

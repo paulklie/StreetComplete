@@ -8,8 +8,6 @@ import androidx.core.graphics.Insets
 import com.google.gson.JsonObject
 import de.westnordost.streetcomplete.Prefs
 import de.westnordost.streetcomplete.R
-import de.westnordost.streetcomplete.data.osm.geometry.ElementGeometry
-import de.westnordost.streetcomplete.data.osm.mapdata.LatLon
 import de.westnordost.streetcomplete.data.preferences.Preferences
 import de.westnordost.streetcomplete.data.preferences.Theme
 import de.westnordost.streetcomplete.screens.main.map.createPinBitmap
@@ -283,15 +281,6 @@ class PinsMapComponent(
         private const val CLUSTER_MAX_ZOOM = 14
     }
 }
-
-data class Pin(
-    val position: LatLon,
-    val icon: Int,
-    val properties: Collection<Pair<String, String>> = emptyList(),
-    val order: Int = 0,
-    val geometry: ElementGeometry? = null,
-    val color: String? = null,
-)
 
 private fun JsonObject.toMap(): Map<String, String> =
     entrySet().associate { it.key to it.value.asString }

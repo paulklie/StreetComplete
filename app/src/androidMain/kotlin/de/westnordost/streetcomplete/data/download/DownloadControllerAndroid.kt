@@ -19,7 +19,11 @@ import de.westnordost.streetcomplete.data.sync.createSyncNotification
 import kotlinx.serialization.json.Json
 
 class DownloadControllerAndroid(private val context: Context) : DownloadController {
-    override fun download(bbox: BoundingBox, isUserInitiated: Boolean) {
+    override fun download(bbox: BoundingBox, isUserInitiated: Boolean, enqueue: Boolean) {
+        if (enqueue && DownloadWorker.downloading) {
+            DownloadWorker.enqueuedDownloads.add(bbox)
+            return
+        }
         WorkManager.getInstance(context).enqueueUniqueWork(
             Downloader.TAG,
             if (isUserInitiated) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP,
@@ -65,7 +69,7 @@ class DownloadWorker(
             if (enqueuedDownloads.isNotEmpty()) {
                 val next = enqueuedDownloads.first()
                 enqueuedDownloads.removeFirstOrNull()
-                DownloadController(context).download(next, true)
+                DownloadControllerAndroid(context).download(next, true)
             }
         }
     }

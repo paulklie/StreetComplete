@@ -180,8 +180,6 @@ class AddMaxHeight : OsmElementQuestType<MaxHeightAnswer>, AndroidQuest {
             }
             is NoMaxHeightSign -> {
                 tags["maxheight:signed"] = "no"
-                if (answer.isTallEnough == true) tags["maxheight"] = "default"
-                else if (answer.isTallEnough == false) tags["maxheight"] = "below_default"
             }
         }
     }

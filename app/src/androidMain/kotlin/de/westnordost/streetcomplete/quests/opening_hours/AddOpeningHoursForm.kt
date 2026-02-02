@@ -142,7 +142,7 @@ class AddOpeningHoursForm : AbstractOsmQuestForm<OpeningHoursAnswer>() {
 
     private fun showInputCommentDialog() {
         val dialogBinding = QuestOpeningHoursCommentBinding.inflate(layoutInflater)
-        val lastValues = prefs.getLastPicked(javaClass.simpleName).takeFavorites(3, 5, 2)
+        val lastValues = prefs.getLastPicked<String>(javaClass.simpleName).takeFavorites(3, 5, 2)
         dialogBinding.commentInput.setAdapter(
             ArrayAdapter(
                 requireContext(),

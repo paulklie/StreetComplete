@@ -1,7 +1,9 @@
 package de.westnordost.streetcomplete.quests.opening_hours
 
+import android.content.Context
 import de.westnordost.osm_opening_hours.parser.toOpeningHoursOrNull
 import de.westnordost.osmfeatures.Feature
+import androidx.appcompat.app.AlertDialog
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.filters.RelativeDate
 import de.westnordost.streetcomplete.data.elementfilter.filters.TagOlderThan
@@ -17,13 +19,22 @@ import de.westnordost.streetcomplete.osm.isPlaceOrDisusedPlace
 import de.westnordost.streetcomplete.osm.opening_hours.parser.isSupportedOpeningHours
 import de.westnordost.streetcomplete.osm.updateCheckDateForKey
 import de.westnordost.streetcomplete.osm.updateWithCheckDate
+import de.westnordost.streetcomplete.quests.booleanQuestSettingsDialog
+import de.westnordost.streetcomplete.quests.fullElementSelectionDialog
+import de.westnordost.streetcomplete.quests.getPrefixedFullElementSelectionPref
 
 class AddOpeningHours() : OsmElementQuestType<OpeningHoursAnswer>, AndroidQuest {
 
     /* See also AddWheelchairAccessBusiness and AddPlaceName, which has a similar list and is/should
        be ordered in the same way for better overview */
-    private val filter by lazy { ("""
+    private val filterString by lazy { ("""
         nodes, ways with
+        (
+        name or brand or noname = yes or name:signed = no
+          or barrier
+          or amenity ~ toilets|bicycle_rental
+        )
+        and
         (
             (
                 (
@@ -143,13 +154,15 @@ mapOf(
         )
         and access !~ private|no
         and opening_hours:signed != no
-    """).toElementFilterExpression() }
+    """) }
     // name filter is there to ensure that place name quest triggers first, so that object is identified if possible
     // Otherwise, in situation of two shops of the similar type with names A and B following may happen
     // (1) mapper answers for one object with opening hours for shop A
     // (2) this or different mapper may answer that it is named B
     // what would result in bad opening hours
     // this filter reduces risk of this happening and also makes this quest less confusing to answer
+
+    private val filter by lazy { prefs.getString(getPrefixedFullElementSelectionPref(prefs), filterString)!!.toElementFilterExpression() }
 
     override val changesetComment = "Survey opening hours"
     override val wikiLink = "Key:opening_hours"
@@ -183,6 +196,7 @@ mapOf(
         // invalid opening_hours rules -> applicable because we want to ask for opening hours again
         // be strict
         val oh = ohStr.toOpeningHoursOrNull(lenient = false) ?: return true
+        if (prefs.getBoolean(RESURVEY_ALL_OPENING_HOURS, false)) return true
         // only display supported rules, however, those that are supported but have colliding
         // weekdays should be shown (->resurveyed), as they are likely mistakes
         return oh.rules.all { rule -> rule.isSupportedOpeningHours() } && !oh.containsTimePoints()
@@ -212,4 +226,25 @@ mapOf(
         }
         tags.remove("opening_hours:covid19")
     }
+
+    override val hasQuestSettings: Boolean = true
+
+    override fun getQuestSettingsDialog(context: Context) =
+        AlertDialog.Builder(context)
+            .setTitle(R.string.quest_settings_what_to_edit)
+            .setPositiveButton(R.string.quest_settings_resurvey_all_opening_hours_title) { _, _ ->
+                booleanQuestSettingsDialog(context, prefs, RESURVEY_ALL_OPENING_HOURS,
+                    R.string.quest_settings_resurvey_all_opening_hours_message,
+                    R.string.quest_settings_resurvey_all_opening_hours_yes,
+                    R.string.quest_settings_resurvey_all_opening_hours_no
+                ).show()
+            }
+            .setNegativeButton(R.string.element_selection_button) { _, _ ->
+                fullElementSelectionDialog(context, prefs, getPrefixedFullElementSelectionPref(prefs),
+                    R.string.quest_settings_element_selection, filterString
+                ).show()
+            }
+            .create()
 }
+
+private const val RESURVEY_ALL_OPENING_HOURS = "qs_AddOpeningHours_resurvey_all"
