@@ -1,13 +1,9 @@
 package de.westnordost.streetcomplete.screens.main
 
-import android.content.res.Resources
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
-import de.westnordost.streetcomplete.BuildConfig
-import de.westnordost.streetcomplete.ApplicationConstants
-import de.westnordost.streetcomplete.Prefs
 import de.westnordost.streetcomplete.data.UnsyncedChangesCountSource
+import de.westnordost.streetcomplete.data.connection.InternetConnectionState
 import de.westnordost.streetcomplete.data.download.DownloadController
 import de.westnordost.streetcomplete.data.download.DownloadProgressSource
 import de.westnordost.streetcomplete.data.messages.Message
@@ -19,10 +15,10 @@ import de.westnordost.streetcomplete.data.osm.mapdata.BoundingBox
 import de.westnordost.streetcomplete.data.osm.mapdata.LatLon
 import de.westnordost.streetcomplete.data.osmnotes.edits.NoteEdit
 import de.westnordost.streetcomplete.data.osmnotes.edits.NoteEditsSource
+import de.westnordost.streetcomplete.data.overlays.Overlay
 import de.westnordost.streetcomplete.data.overlays.OverlayRegistry
 import de.westnordost.streetcomplete.data.overlays.SelectedOverlayController
 import de.westnordost.streetcomplete.data.overlays.SelectedOverlaySource
-import de.westnordost.streetcomplete.data.platform.InternetConnectionState
 import de.westnordost.streetcomplete.data.preferences.Autosync
 import de.westnordost.streetcomplete.data.preferences.Preferences
 import de.westnordost.streetcomplete.data.presets.EditTypePresetsSource
@@ -36,17 +32,13 @@ import de.westnordost.streetcomplete.data.user.UserLoginSource
 import de.westnordost.streetcomplete.data.user.statistics.StatisticsSource
 import de.westnordost.streetcomplete.data.visiblequests.TeamModeQuestFilter
 import de.westnordost.streetcomplete.data.visiblequests.VisibleEditTypeSource
-import de.westnordost.streetcomplete.overlays.Overlay
-import de.westnordost.streetcomplete.overlays.custom.CustomOverlay
 import de.westnordost.streetcomplete.screens.main.controls.LocationState
 import de.westnordost.streetcomplete.screens.main.map.maplibre.CameraPosition
 import de.westnordost.streetcomplete.util.CrashReportExceptionHandler
-import de.westnordost.streetcomplete.util.getFakeCustomOverlays
 import de.westnordost.streetcomplete.util.ktx.launch
 import de.westnordost.streetcomplete.util.parseGeoUri
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -55,7 +47,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 
@@ -80,7 +71,6 @@ class MainViewModelImpl(
     private val elementEditsSource: ElementEditsSource,
     private val noteEditsSource: NoteEditsSource,
     private val prefs: Preferences,
-    private val resources: Resources
 ) : MainViewModel() {
 
     /* error handling */
@@ -192,22 +182,13 @@ class MainViewModelImpl(
     }.stateIn(viewModelScope + IO, SharingStarted.Eagerly, getVisibleOverlays())
 
     private fun getVisibleOverlays(): List<Overlay> =
-        overlayRegistry.filter {
-            val eeAllowed = if (prefs.getBoolean(Prefs.EXPERT_MODE, false)) true
-                else overlayRegistry.getOrdinalOf(it)!! < ApplicationConstants.EE_QUEST_OFFSET
-            visibleEditTypeSource.isVisible(it)
-                && eeAllowed // expert mode on, or SC overlay
-                && it !is CustomOverlay // custom overlay added separately
-        } + getFakeCustomOverlays(prefs, resources)
+        overlayRegistry.filter { visibleEditTypeSource.isVisible(it) }
 
     override val selectedOverlay: StateFlow<Overlay?> = callbackFlow {
         send(selectedOverlayController.selectedOverlay)
         val listener = object : SelectedOverlaySource.Listener {
             override fun onSelectedOverlayChanged() {
-                if (selectedOverlayController.selectedOverlay is CustomOverlay) {
-                    trySend(null) // necessary for button reload when switching between custom overlays
-                    viewModelScope.launch { delay(50); trySend(selectedOverlayController.selectedOverlay) }
-                } else trySend(selectedOverlayController.selectedOverlay)
+                trySend(selectedOverlayController.selectedOverlay)
             }
         }
         selectedOverlayController.addListener(listener)
@@ -238,8 +219,8 @@ class MainViewModelImpl(
         launch(IO) { teamModeQuestFilter.disableTeamMode() }
     }
 
-    override fun download(bbox: BoundingBox, enqueue: Boolean) {
-        downloadController.download(bbox, true, enqueue)
+    override fun download(bbox: BoundingBox) {
+        downloadController.download(bbox, true)
     }
 
     private val teamModeListener = object : TeamModeQuestFilter.TeamModeChangeListener {
@@ -304,10 +285,10 @@ class MainViewModelImpl(
         awaitClose { userLoginSource.removeListener(listener) }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    override val isConnected: Boolean get() = internetConnectionState.isConnected || BuildConfig.DEBUG
+    override val isConnected: Boolean get() = internetConnectionState.isConnected
 
     override fun upload() {
-        if (isLoggedIn.value || BuildConfig.DEBUG) {
+        if (isLoggedIn.value) {
             uploadController.upload(isUserInitiated = true)
         } else {
             isRequestingLogin.value = true
@@ -427,14 +408,6 @@ class MainViewModelImpl(
     override val isRecordingTracks = MutableStateFlow(false)
 
     override val userHasMovedCamera = MutableStateFlow(false)
-
-    override val showQuickSettings = callbackFlow {
-        send(prefs.showQuickSettings)
-        val listener = prefs.onShowQuickSettingsChanged { trySend(it) }
-        awaitClose { listener.deactivate() }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, prefs.showQuickSettings)
-    override val reverseQuestOrder = MutableStateFlow(false)
-    override val showMainMenuDialog = mutableStateOf(false)
 
     // ---------------------------------------------------------------------------------------
 

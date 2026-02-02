@@ -1,112 +1,175 @@
 package de.westnordost.streetcomplete.osm.street_parking
 
-import android.content.Context
-import de.westnordost.streetcomplete.R
-import de.westnordost.streetcomplete.osm.street_parking.ParkingPosition.HALF_ON_STREET
-import de.westnordost.streetcomplete.osm.street_parking.ParkingPosition.OFF_STREET
-import de.westnordost.streetcomplete.osm.street_parking.ParkingPosition.ON_STREET
-import de.westnordost.streetcomplete.osm.street_parking.ParkingPosition.PAINTED_AREA_ONLY
-import de.westnordost.streetcomplete.osm.street_parking.ParkingPosition.STAGGERED_HALF_ON_STREET
-import de.westnordost.streetcomplete.osm.street_parking.ParkingPosition.STAGGERED_ON_STREET
-import de.westnordost.streetcomplete.osm.street_parking.ParkingPosition.STREET_SIDE
-import de.westnordost.streetcomplete.view.DrawableImage
-import de.westnordost.streetcomplete.view.Image
-import de.westnordost.streetcomplete.view.ResImage
-import de.westnordost.streetcomplete.view.ResText
-import de.westnordost.streetcomplete.view.controller.StreetSideDisplayItem
-import de.westnordost.streetcomplete.view.controller.StreetSideItem2
-import de.westnordost.streetcomplete.view.image_select.DisplayItem
-import de.westnordost.streetcomplete.view.image_select.Item2
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.painter.Painter
+import de.westnordost.streetcomplete.osm.street_parking.ParkingOrientation.*
+import de.westnordost.streetcomplete.osm.street_parking.ParkingPosition.*
+import de.westnordost.streetcomplete.resources.Res
+import de.westnordost.streetcomplete.resources.car1
+import de.westnordost.streetcomplete.resources.car1a
+import de.westnordost.streetcomplete.resources.car1b
+import de.westnordost.streetcomplete.resources.car2
+import de.westnordost.streetcomplete.resources.car2a
+import de.westnordost.streetcomplete.resources.car2b
+import de.westnordost.streetcomplete.resources.car3
+import de.westnordost.streetcomplete.resources.car3a
+import de.westnordost.streetcomplete.resources.car4
+import de.westnordost.streetcomplete.resources.car5
+import de.westnordost.streetcomplete.resources.car_nyan
+import de.westnordost.streetcomplete.resources.floating_no
+import de.westnordost.streetcomplete.resources.floating_separate
+import de.westnordost.streetcomplete.resources.street_broad
+import de.westnordost.streetcomplete.resources.street_narrow
+import de.westnordost.streetcomplete.resources.street_none
+import de.westnordost.streetcomplete.resources.street_normal
+import de.westnordost.streetcomplete.resources.street_parking_bays_diagonal
+import de.westnordost.streetcomplete.resources.street_parking_bays_parallel
+import de.westnordost.streetcomplete.resources.street_parking_bays_perpendicular
+import de.westnordost.streetcomplete.resources.street_parking_half_on_kerb
+import de.westnordost.streetcomplete.resources.street_parking_no
+import de.westnordost.streetcomplete.resources.street_parking_on_kerb
+import de.westnordost.streetcomplete.resources.street_parking_on_street
+import de.westnordost.streetcomplete.resources.street_parking_separate
+import de.westnordost.streetcomplete.resources.street_parking_staggered_half_on_kerb
+import de.westnordost.streetcomplete.resources.street_parking_staggered_on_street
+import de.westnordost.streetcomplete.resources.street_parking_street_side
+import de.westnordost.streetcomplete.resources.street_side_unknown
+import de.westnordost.streetcomplete.resources.street_side_unknown_l
+import de.westnordost.streetcomplete.resources.street_very_narrow
+import de.westnordost.streetcomplete.util.ktx.isApril1st
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.painterResource
+import kotlin.random.Random
 
 /** Functions to display a (parsed) street parking in the UI */
 
-fun StreetParking.asItem(
-    context: Context,
-    isUpsideDown: Boolean
-): DisplayItem<StreetParking> = Item2(
-    this,
-    getDialogIcon(context, isUpsideDown),
-    titleResId?.let { ResText(it) }
-)
-
-fun StreetParking.asStreetSideItem(
-    context: Context,
-    isUpsideDown: Boolean,
-    isRightSide: Boolean
-): StreetSideDisplayItem<StreetParking> = StreetSideItem2(
-    this,
-    getIcon(context, isUpsideDown, isRightSide),
-    titleResId?.let { ResText(it) },
-    getDialogIcon(context, isUpsideDown),
-    getFloatingIcon()
-)
-
-private val StreetParking.titleResId: Int? get() = when (this) {
-    StreetParking.None -> R.string.street_parking_no
-    is StreetParking.PositionAndOrientation -> position.titleResId
-    StreetParking.Separate -> R.string.street_parking_separate
-    StreetParking.Unknown, StreetParking.Incomplete -> null
+val StreetParking.title: StringResource? get() = when (this) {
+    is StreetParking.PositionAndOrientation ->
+        position.title
+    StreetParking.None ->
+        Res.string.street_parking_no
+    StreetParking.Separate ->
+        Res.string.street_parking_separate
+    StreetParking.Unknown, StreetParking.Incomplete ->
+        null
 }
 
 /** Image that should be shown in the street side select puzzle */
-private fun StreetParking.getIcon(context: Context, isUpsideDown: Boolean, isRightSide: Boolean): Image = when (this) {
+@Composable
+fun StreetParking.painter(isUpsideDown: Boolean, isRightSide: Boolean): Painter = when (this) {
     is StreetParking.PositionAndOrientation ->
-        getIcon(context, isUpsideDown, isRightSide)
+        painter(isUpsideDown, isRightSide)
     StreetParking.None, StreetParking.Separate ->
-        ResImage(R.drawable.ic_street_none)
+        painterResource(Res.drawable.street_none)
     StreetParking.Unknown, StreetParking.Incomplete ->
-        ResImage(if (isUpsideDown) R.drawable.ic_street_side_unknown_l else R.drawable.ic_street_side_unknown)
+        painterResource(if (isUpsideDown) Res.drawable.street_side_unknown_l else Res.drawable.street_side_unknown)
 }
 
 /** Icon that should be shown as the icon in a selection dialog */
-private fun StreetParking.getDialogIcon(context: Context, isUpsideDown: Boolean): Image = when (this) {
+@Composable
+fun StreetParking.dialogPainter(isUpsideDown: Boolean): Painter = when (this) {
     is StreetParking.PositionAndOrientation ->
-        getDialogIcon(context, isUpsideDown)
+        dialogPainter(isUpsideDown)
     StreetParking.None ->
-        ResImage(R.drawable.ic_floating_no)
+        painterResource(Res.drawable.floating_no)
     StreetParking.Separate ->
-        ResImage(R.drawable.ic_floating_separate)
+        painterResource(Res.drawable.floating_separate)
     StreetParking.Incomplete, StreetParking.Unknown ->
-        ResImage(if (isUpsideDown) R.drawable.ic_street_side_unknown_l else R.drawable.ic_street_side_unknown)
+        painterResource(if (isUpsideDown) Res.drawable.street_side_unknown_l else Res.drawable.street_side_unknown)
 }
 
 /** Icon that should be shown as the floating icon in the street side select puzzle */
-private fun StreetParking.getFloatingIcon(): Image? = when (this) {
-    StreetParking.Separate -> ResImage(R.drawable.ic_floating_separate)
+val StreetParking.floatingIcon: DrawableResource? get() = when (this) {
+    StreetParking.Separate -> Res.drawable.floating_separate
+    StreetParking.None -> Res.drawable.floating_no
     else -> null
 }
 
-fun StreetParking.PositionAndOrientation.asItem(context: Context, isUpsideDown: Boolean) =
-    Item2(this, getDialogIcon(context, isUpsideDown), ResText(position.titleResId))
-
 /** An icon for a street parking is square and shows always the same car so it is easier to spot
  *  the variation that matters(on kerb, half on kerb etc) */
-private fun StreetParking.PositionAndOrientation.getDialogIcon(context: Context, isUpsideDown: Boolean): Image =
-    DrawableImage(StreetParkingDrawable(context, orientation, position, isUpsideDown, 128, 128, R.drawable.ic_car1))
+@Composable
+private fun StreetParking.PositionAndOrientation.dialogPainter(isUpsideDown: Boolean): Painter {
+    val carPainter =
+        if (isApril1st()) painterResource(Res.drawable.car_nyan)
+        else painterResource(Res.drawable.car1)
+    val backgroundPainter = painterResource(background)
+    return remember(this, isUpsideDown) {
+        StreetParkingPainter(
+            intrinsicSize = Size(256f, 256f),
+            parkingOrientation = orientation,
+            parkingPosition = position,
+            backgroundPainter = backgroundPainter,
+            carPainters = listOf(carPainter),
+            isUpsideDown = isUpsideDown,
+            randomSeed = 0,
+        )
+    }
+}
 
 /** An image for a street parking to be displayed shows a wide variety of different cars so that
  *  it looks nicer and/or closer to reality */
-private fun StreetParking.PositionAndOrientation.getIcon(context: Context, isUpsideDown: Boolean, isRightSide: Boolean): Image {
-    val drawable = StreetParkingDrawable(context, orientation, position, isUpsideDown, 128, 512)
-    // show left and right side staggered to each other
-    if (isRightSide) drawable.phase = 0.5f
-    return DrawableImage(drawable)
+@Composable
+private fun StreetParking.PositionAndOrientation.painter(isUpsideDown: Boolean, isRightSide: Boolean): Painter {
+    val carPainters =
+        if (isApril1st()) listOf(painterResource(Res.drawable.car_nyan))
+        else CAR_DRAWABLES.map { painterResource(it) }
+    val backgroundPainter = painterResource(background)
+    val randomSeed = remember { Random.Default.nextInt() }
+    return remember(this, isUpsideDown, isRightSide) {
+        StreetParkingPainter(
+            intrinsicSize = Size(128f, 256f),
+            parkingOrientation = orientation,
+            parkingPosition = position,
+            backgroundPainter = backgroundPainter,
+            carPainters = carPainters,
+            isUpsideDown = isUpsideDown,
+            randomSeed = randomSeed,
+            // show left and right side staggered to each other
+            phase = if (isRightSide) 0.5f else 0f,
+        )
+    }
 }
 
-private val ParkingPosition.titleResId: Int get() = when (this) {
-    ON_STREET -> R.string.street_parking_on_street
-    HALF_ON_STREET -> R.string.street_parking_half_on_kerb
-    OFF_STREET -> R.string.street_parking_on_kerb
-    STREET_SIDE -> R.string.street_parking_street_side
-    PAINTED_AREA_ONLY, STAGGERED_ON_STREET -> R.string.street_parking_staggered_on_street
-    STAGGERED_HALF_ON_STREET -> R.string.street_parking_staggered_half_on_kerb
+/** drawables of the street in the background */
+private val StreetParking.PositionAndOrientation.background: DrawableResource get() =
+    when (position) {
+        ON_STREET, PAINTED_AREA_ONLY, STAGGERED_ON_STREET -> when (orientation) {
+            PARALLEL -> Res.drawable.street_normal
+            else -> Res.drawable.street_broad
+        }
+        HALF_ON_STREET, STAGGERED_HALF_ON_STREET -> when (orientation) {
+            PARALLEL -> Res.drawable.street_narrow
+            else -> Res.drawable.street_normal
+        }
+        OFF_STREET -> Res.drawable.street_very_narrow
+        STREET_SIDE -> when (orientation) {
+            PARALLEL -> Res.drawable.street_parking_bays_parallel
+            DIAGONAL -> Res.drawable.street_parking_bays_diagonal
+            PERPENDICULAR -> Res.drawable.street_parking_bays_perpendicular
+        }
+    }
+
+private val ParkingPosition.title: StringResource get() = when (this) {
+    ON_STREET -> Res.string.street_parking_on_street
+    HALF_ON_STREET -> Res.string.street_parking_half_on_kerb
+    OFF_STREET -> Res.string.street_parking_on_kerb
+    STREET_SIDE -> Res.string.street_parking_street_side
+    PAINTED_AREA_ONLY, STAGGERED_ON_STREET -> Res.string.street_parking_staggered_on_street
+    STAGGERED_HALF_ON_STREET -> Res.string.street_parking_staggered_half_on_kerb
 }
 
-val DISPLAYED_PARKING_POSITIONS: List<ParkingPosition> = listOf(
-    ON_STREET,
-    HALF_ON_STREET,
-    OFF_STREET,
-    STREET_SIDE,
-    STAGGERED_ON_STREET,
-    STAGGERED_HALF_ON_STREET
+private val CAR_DRAWABLES = listOf(
+    Res.drawable.car1,
+    Res.drawable.car1a,
+    Res.drawable.car1b,
+    Res.drawable.car2,
+    Res.drawable.car2a,
+    Res.drawable.car2b,
+    Res.drawable.car3,
+    Res.drawable.car3a,
+    Res.drawable.car4,
+    Res.drawable.car5,
 )

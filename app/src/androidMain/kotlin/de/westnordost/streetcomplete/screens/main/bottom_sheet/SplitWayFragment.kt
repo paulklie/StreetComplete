@@ -17,11 +17,9 @@ import androidx.core.view.isGone
 import androidx.core.view.isInvisible
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
-import com.russhwolf.settings.ObservableSettings
-import de.westnordost.streetcomplete.Prefs
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.AllEditTypes
-import de.westnordost.streetcomplete.data.location.RecentLocationStore
+import de.westnordost.streetcomplete.data.location.SurveyChecker
 import de.westnordost.streetcomplete.data.osm.edits.ElementEditType
 import de.westnordost.streetcomplete.data.osm.edits.ElementEditsController
 import de.westnordost.streetcomplete.data.osm.edits.split_way.SplitAtLinePosition
@@ -33,6 +31,7 @@ import de.westnordost.streetcomplete.data.osm.geometry.ElementPolylinesGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.ElementKey
 import de.westnordost.streetcomplete.data.osm.mapdata.LatLon
 import de.westnordost.streetcomplete.data.osm.mapdata.Way
+import de.westnordost.streetcomplete.data.osm.mapdata.key
 import de.westnordost.streetcomplete.databinding.FragmentSplitWayBinding
 import de.westnordost.streetcomplete.overlays.IsShowingElement
 import de.westnordost.streetcomplete.screens.main.map.Marker
@@ -49,14 +48,12 @@ import de.westnordost.streetcomplete.util.math.crossTrackDistanceTo
 import de.westnordost.streetcomplete.util.math.distanceTo
 import de.westnordost.streetcomplete.util.viewBinding
 import de.westnordost.streetcomplete.view.RoundRectOutlineProvider
-import de.westnordost.streetcomplete.view.checkIsSurvey
 import de.westnordost.streetcomplete.view.confirmIsSurvey
 import de.westnordost.streetcomplete.view.insets_animation.respectSystemInsets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.resume
@@ -74,8 +71,7 @@ class SplitWayFragment :
 
     private val allEditTypes: AllEditTypes by inject()
     private val soundFx: SoundFx by inject()
-    private val recentLocationStore: RecentLocationStore by inject()
-    private val prefs: ObservableSettings by inject()
+    private val surveyChecker: SurveyChecker by inject()
 
     override val elementKey: ElementKey by lazy { way.key }
 
@@ -98,7 +94,6 @@ class SplitWayFragment :
 
     private val showsGeometryMarkersListener: ShowsGeometryMarkers? get() =
         parentFragment as? ShowsGeometryMarkers ?: activity as? ShowsGeometryMarkers
-    private val initialMap = prefs.getString(Prefs.THEME_BACKGROUND, "MAP")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,8 +120,6 @@ class SplitWayFragment :
 
         binding.undoButton.isInvisible = !hasChanges
         binding.okButton.isInvisible = !isFormComplete
-        binding.mapButton.setOnClickListener { toggleBackground() }
-        updateMapButtonText()
 
         val cornerRadius = resources.getDimension(R.dimen.speech_bubble_rounded_corner_radius)
         val margin = resources.getDimensionPixelSize(R.dimen.horizontal_speech_bubble_margin)
@@ -154,14 +147,13 @@ class SplitWayFragment :
     }
 
     private suspend fun splitWay() {
-        restoreBackground()
         binding.glassPane.isGone = false
         if (splits.size <= 2 || confirmManySplits()) {
-            val isSurvey = checkIsSurvey(geometry, recentLocationStore.get())
+            val isSurvey = surveyChecker.checkIsSurvey(geometry)
             if (isSurvey || confirmIsSurvey(requireContext())) {
                 val action = SplitWayAction(way, ArrayList(splits.map { it.first }))
                 withContext(Dispatchers.IO) {
-                    elementEditsController.add(editType, geometry, "survey,extra", action, isSurvey)
+                    elementEditsController.add(editType, geometry, "survey", action, isSurvey)
                 }
                 listener?.onSplittedWay(editType, way, geometry)
                 return
@@ -191,22 +183,6 @@ class SplitWayFragment :
                 ElementPointGeometry(item.second)
             )
         }
-    }
-
-    private fun toggleBackground() {
-        prefs.putString(Prefs.THEME_BACKGROUND, if (prefs.getString(Prefs.THEME_BACKGROUND, "MAP") == "MAP") "AERIAL" else "MAP")
-        updateMapButtonText()
-    }
-
-    private fun updateMapButtonText() {
-        val isMap = prefs.getString(Prefs.THEME_BACKGROUND, "MAP") == "MAP"
-        val textId = if (isMap) R.string.background_type_aerial_esri else R.string.background_type_map
-        binding.mapButton.setText(textId)
-    }
-
-    private fun restoreBackground() {
-        if (prefs.getString(Prefs.THEME_BACKGROUND, "MAP") != initialMap)
-            prefs.putString(Prefs.THEME_BACKGROUND, initialMap)
     }
 
     @UiThread
@@ -296,14 +272,12 @@ class SplitWayFragment :
 
     @UiThread override fun onClickClose(onConfirmed: () -> Unit) {
         if (!hasChanges) {
-            restoreBackground()
             onConfirmed()
         } else {
             activity?.let {
                 AlertDialog.Builder(it)
                     .setMessage(R.string.confirmation_discard_title)
                     .setPositiveButton(R.string.confirmation_discard_positive) { _, _ ->
-                        restoreBackground()
                         onConfirmed()
                     }
                     .setNegativeButton(R.string.short_no_answer_on_button, null)

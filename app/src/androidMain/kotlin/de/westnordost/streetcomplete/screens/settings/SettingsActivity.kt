@@ -27,6 +27,7 @@ import de.westnordost.streetcomplete.data.osm.mapdata.Way
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmElementQuestType
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmQuest
 import de.westnordost.streetcomplete.data.preferences.Preferences
+import de.westnordost.streetcomplete.data.quest.AndroidQuest
 import de.westnordost.streetcomplete.data.quest.QuestKey
 import de.westnordost.streetcomplete.data.quest.QuestType
 import de.westnordost.streetcomplete.data.visiblequests.HideQuestController
@@ -65,7 +66,7 @@ class SettingsActivity : BaseActivity(), AbstractOsmQuestForm.Listener {
                     SettingsNavHost(
                         onClickBack = { finish() },
                         onClickShowQuestTypeForDebug = ::onClickQuestType,
-                        startDestination = if (launchQuestSelection) SettingsDestination.QuestSelection else null,
+                        startDestination = if (launchQuestSelection) SettingsDestination.QuestSelection else null
                     )
                 }
             }
@@ -119,10 +120,6 @@ class SettingsActivity : BaseActivity(), AbstractOsmQuestForm.Listener {
         popQuestForm()
     }
 
-    override fun onEditTags(element: Element, geometry: ElementGeometry, questKey: QuestKey?, editTypeName: String?) {
-        popQuestForm()
-    }
-
     private fun popQuestForm() {
         binding.questFormContainer.visibility = View.GONE
         supportFragmentManager.popBackStack()
@@ -140,32 +137,32 @@ class SettingsActivity : BaseActivity(), AbstractOsmQuestForm.Listener {
         val (element, geometry) = createMockElementWithGeometry(questType)
         val quest = OsmQuest(questType, element.type, element.id, geometry)
 
-        val f = questType.createForm()
+        val f = (questType as? AndroidQuest)?.createForm() ?: return
         if (f.arguments == null) f.arguments = bundleOf()
         f.requireArguments().putAll(
             AbstractQuestForm.createArguments(quest.key, quest.type, geometry, 30.0, 0.0)
         )
-        f.requireArguments().putAll(AbstractOsmQuestForm.createArguments(element))
-        f.hideQuestController = object : HideQuestController {
-            override fun hide(key: QuestKey) {}
-            override fun tempHide(key: QuestKey) {}
-        }
-        f.addElementEditsController = object : AddElementEditsController {
-            override fun add(
-                type: ElementEditType,
-                geometry: ElementGeometry,
-                source: String,
-                action: ElementEditAction,
-                isNearUserLocation: Boolean,
-                key: QuestKey?
-            ) {
-                when (action) {
-                    is DeletePoiNodeAction -> {
-                        message("Deleted node")
-                    }
-                    is UpdateElementTagsAction -> {
-                        val tagging = action.changes.changes.joinToString("\n")
-                        message("Tagging\n$tagging")
+        if (f is AbstractOsmQuestForm<*>) {
+            f.requireArguments().putAll(AbstractOsmQuestForm.createArguments(element))
+            f.hideQuestController = object : HideQuestController {
+                override fun hide(key: QuestKey) {}
+            }
+            f.addElementEditsController = object : AddElementEditsController {
+                override fun add(
+                    type: ElementEditType,
+                    geometry: ElementGeometry,
+                    source: String,
+                    action: ElementEditAction,
+                    isNearUserLocation: Boolean
+                ) {
+                    when (action) {
+                        is DeletePoiNodeAction -> {
+                            message("Deleted node")
+                        }
+                        is UpdateElementTagsAction -> {
+                            val tagging = action.changes.changes.joinToString("\n")
+                            message("Tagging\n$tagging")
+                        }
                     }
                 }
             }
@@ -180,8 +177,6 @@ class SettingsActivity : BaseActivity(), AbstractOsmQuestForm.Listener {
 
     private fun updateContainerVisibility() {
         binding.questFormContainer.isGone = supportFragmentManager.findFragmentById(R.id.questForm) == null
-        binding.sceeSettingsFragmentContainer.isGone = supportFragmentManager.findFragmentById(R.id.sceeSettingsFragment) == null
-        binding.toolbar.toolbar.isGone = supportFragmentManager.findFragmentById(R.id.sceeSettingsFragment) == null
     }
 
     private fun createMockElementWithGeometry(questType: OsmElementQuestType<*>): Pair<Element, ElementGeometry> {

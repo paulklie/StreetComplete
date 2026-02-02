@@ -1,8 +1,6 @@
 package de.westnordost.streetcomplete.screens.settings.quest_selection
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Checkbox
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
@@ -29,19 +26,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.westnordost.streetcomplete.R
-import de.westnordost.streetcomplete.data.quest.QuestTypeRegistry
-import de.westnordost.streetcomplete.quests.questPrefix
 import de.westnordost.streetcomplete.quests.surface.AddRoadSurface
-import org.koin.compose.koinInject
+import de.westnordost.streetcomplete.resources.Res
+import de.westnordost.streetcomplete.resources.ic_drag_vertical_24
+import de.westnordost.streetcomplete.resources.questList_disabled_by_default
+import de.westnordost.streetcomplete.resources.questList_disabled_in_country
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 
 /** Single item in the quest selection list. Shows icon + title, whether it is enabled and whether
  *  it is disabled by default / disabled in the country one is in */
@@ -53,15 +49,13 @@ fun QuestSelectionRow(
     modifier: Modifier = Modifier
 ) {
     val alpha = if (!item.selected) ContentAlpha.disabled else ContentAlpha.high
-    val questTypeRegistry: QuestTypeRegistry = koinInject()
-    val c = LocalContext.current // wtf is the point of this?
 
     Row(
         modifier = modifier.height(IntrinsicSize.Min),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (item.isInteractionEnabled(questTypeRegistry)) {
-            Icon(painterResource(R.drawable.ic_drag_vertical), "Reorder")
+        if (item.isInteractionEnabled) {
+            Icon(painterResource(Res.drawable.ic_drag_vertical_24), "Reorder")
         } else {
             Spacer(Modifier.size(24.dp))
         }
@@ -80,51 +74,23 @@ fun QuestSelectionRow(
                 style = MaterialTheme.typography.body1,
             )
             if (!item.enabledInCurrentCountry) {
-                DisabledHint(stringResource(R.string.questList_disabled_in_country, displayCountry))
+                DisabledHint(stringResource(Res.string.questList_disabled_in_country, displayCountry))
             }
-            if (item.questType.defaultDisabledMessage != 0) {
-                DisabledHint(stringResource(R.string.questList_disabled_by_default))
+            if (item.questType.defaultDisabledMessage != null) {
+                DisabledHint(stringResource(Res.string.questList_disabled_by_default))
             }
-        }
-        if (item.questType.hasQuestSettings) {
-            var showQuestSettings by remember { mutableStateOf(false) }
-            Image(
-                painter = painterResource(R.drawable.ic_settings_48dp),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .size(48.dp)
-                    .clickable { showQuestSettings = true }
-                    .background( // looks ugly and does not appear right after dismissing dialog, but whatever... I don't care any more.
-                        color = nowItHasToBeSomewhereElse(item),
-                        shape = CircleShape
-                    )
-                    .alpha(alpha),
-            )
-            if (showQuestSettings)
-                item.questType.QuestSettings(c) { showQuestSettings = false }
         }
         Box(
-            modifier = Modifier
-                .width(64.dp)
-                .fillMaxHeight(),
+            modifier = Modifier.width(64.dp).fillMaxHeight(),
             contentAlignment = Alignment.Center
         ) {
             Checkbox(
                 checked = item.selected,
                 onCheckedChange = onToggleSelection,
-                enabled = item.isInteractionEnabled(questTypeRegistry)
+                enabled = item.isInteractionEnabled
             )
         }
     }
-}
-
-@Composable
-private fun nowItHasToBeSomewhereElse(item: QuestSelection): Color {
-    val start = questPrefix(item.prefs) + "qs_" + item.questType.name + "_"
-    return if (item.prefs.prefs.keys.any { it.startsWith(start) })
-        colorResource(id = R.color.accent)
-    else Color.Transparent
 }
 
 @Composable
@@ -143,7 +109,7 @@ private fun QuestSelectionRowPreview() {
     var selected by remember { mutableStateOf(true) }
 
     QuestSelectionRow(
-        item = QuestSelection(AddRoadSurface(), selected, false, koinInject()),
+        item = QuestSelection(AddRoadSurface(), selected, false),
         onToggleSelection = { selected = !selected },
         displayCountry = "Atlantis",
     )

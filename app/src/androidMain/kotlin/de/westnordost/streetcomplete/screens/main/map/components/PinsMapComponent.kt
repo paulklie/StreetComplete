@@ -136,7 +136,6 @@ class PinsMapComponent(
                 textAllowOverlap(true),
                 iconIgnorePlacement(true),
                 textIgnorePlacement(true),
-                symbolSortKey(50f)
             ),
         CircleLayer("pin-dot-layer", SOURCE)
             .withFilter(any(
@@ -150,9 +149,6 @@ class PinsMapComponent(
                 circleStrokeWidth(1f),
                 circleTranslate(arrayOf(0f, if (prefs.prefs.getBoolean(Prefs.OFFSET_FIX, false)) 0f else -8f)), // so that it hides behind the pin
                 circleTranslateAnchor(Property.CIRCLE_TRANSLATE_ANCHOR_VIEWPORT),
-                symbolSortKey(40f),
-                iconAllowOverlap(true),
-                iconIgnorePlacement(true),
             ),
         CircleLayer("pin-quest-dot-layer", DOT_SOURCE)
             .withFilter(all(gt(zoom(), CLUSTER_MAX_ZOOM)))
