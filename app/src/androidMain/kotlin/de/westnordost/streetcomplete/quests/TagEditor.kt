@@ -419,7 +419,7 @@ open class TagEditor : Fragment(), IsCloseableBottomSheet {
             && newTags.keys.all { it.length < 255 }
             && newTags.values.all { it.length < 255 }
             && (newTags.isNotEmpty() || mapDataSource.getWaysForNode(originalElement.id).isNotEmpty()) // allow deleting all tags if node is part of a way
-            && newTags.keys.none { problematicKeyCharacters.containsMatchIn(it) }
+            && newTags.keys.none { problematicKeyCharacters.containsMatchIn(it.trim()) } // trim happens on ok, so no need to fail a check. see #822 / #824
 
     private fun showOk() = requireActivity().runOnUiThread { if (tagsChangedAndOk()) binding.okButton.popIn() else binding.okButton.popOut() }
 
