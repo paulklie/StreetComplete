@@ -13,7 +13,7 @@ import de.westnordost.streetcomplete.data.user.achievements.EditTypeAchievement.
 import de.westnordost.streetcomplete.osm.Tags
 import de.westnordost.streetcomplete.osm.isCrossing
 
-class AddCrossingMarkings : OsmElementQuestType<CrossingMarkings>, AndroidQuest {
+class AddCrossingMarkings : OsmElementQuestType<Set<CrossingMarkings>>, AndroidQuest {
 
     private val crossingFilter by lazy { """
         nodes with
@@ -65,8 +65,8 @@ class AddCrossingMarkings : OsmElementQuestType<CrossingMarkings>, AndroidQuest 
             AddCrossingMarkingsYesNoForm()
         }
 
-    override fun applyAnswerTo(answer: CrossingMarkings, tags: Tags, geometry: ElementGeometry, timestampEdited: Long) {
-        tags["crossing:markings"] = answer.osmValue
+    override fun applyAnswerTo(answer: Set<CrossingMarkings>, tags: Tags, geometry: ElementGeometry, timestampEdited: Long) {
+        tags["crossing:markings"] = answer.map { it.osmValue }.sorted().joinToString(";")
     }
 
     override val hasQuestSettings: Boolean = true
