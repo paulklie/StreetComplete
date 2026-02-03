@@ -1,5 +1,6 @@
 package de.westnordost.streetcomplete.screens.main.errors
 
+import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.DialogProperties
@@ -14,13 +15,18 @@ import org.jetbrains.compose.resources.stringResource
 fun SendErrorReportDialog(
     onDismissRequest: () -> Unit,
     onConfirmed: () -> Unit,
-    title: String
+    title: String,
+    copy: () -> Unit,
 ) {
     ConfirmationDialog(
         onDismissRequest = onDismissRequest,
         onConfirmed = onConfirmed,
         title = { Text(title) },
-        text = { Text(stringResource(Res.string.crash_message)) },
+        text = {
+            Text(stringResource(Res.string.crash_message))
+            Button(copy) {
+                Text(androidx.compose.ui.res.stringResource(android.R.string.copy)) }
+            },
         confirmButtonText = stringResource(Res.string.crash_compose_email),
         // should be more of a modal dialog
         properties = DialogProperties(
