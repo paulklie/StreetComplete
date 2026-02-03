@@ -50,8 +50,10 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import de.westnordost.streetcomplete.ApplicationConstants
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.messages.Message
+import de.westnordost.streetcomplete.data.user.UserLoginController
 import de.westnordost.streetcomplete.resources.Res
 import de.westnordost.streetcomplete.resources.location_dot_small
 import de.westnordost.streetcomplete.resources.map_attribution_osm
@@ -198,7 +200,8 @@ fun MainScreen(
         if (viewModel.isConnected) {
             viewModel.upload()
         } else {
-            context.toast(R.string.offline)
+            if (ApplicationConstants.DEBUG && !UserLoginController.loggedIn) viewModel.upload()
+            else context.toast(R.string.offline)
         }
     }
 

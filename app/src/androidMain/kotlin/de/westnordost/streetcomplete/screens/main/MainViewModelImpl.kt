@@ -303,10 +303,10 @@ class MainViewModelImpl(
         awaitClose { userLoginSource.removeListener(listener) }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    override val isConnected: Boolean get() = internetConnectionState.isConnected || ApplicationConstants.DEBUG
+    override val isConnected: Boolean get() = internetConnectionState.isConnected
 
     override fun upload() {
-        if (isLoggedIn.value || ApplicationConstants.DEBUG) {
+        if (isLoggedIn.value || (ApplicationConstants.DEBUG && !isConnected)) {
             uploadController.upload(isUserInitiated = true)
         } else {
             isRequestingLogin.value = true
