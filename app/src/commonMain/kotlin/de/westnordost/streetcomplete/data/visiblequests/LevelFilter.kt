@@ -81,6 +81,11 @@ class LevelFilter internal constructor(private val prefs: ObservableSettings) : 
             if (levels.contains(allowedLevel)) return true
             if (value == allowedLevel) return true // maybe user entered 0;1
         }
+        when (tags["location"]) {
+            "underground" -> return allowedLevel == "<0" || allowedLevel == "< 0"
+            "overhead", "roof", "rooftop", "bridge", "pole" -> return allowedLevel == ">0" || allowedLevel == "> 0"
+            "overground", "surface" -> allowedLevel == "0"
+        }
         return false
     }
 }
