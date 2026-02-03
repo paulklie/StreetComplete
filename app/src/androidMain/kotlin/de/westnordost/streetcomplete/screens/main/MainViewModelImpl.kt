@@ -4,7 +4,6 @@ import android.content.res.Resources
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewModelScope
-import de.westnordost.streetcomplete.BuildConfig
 import de.westnordost.streetcomplete.ApplicationConstants
 import de.westnordost.streetcomplete.Prefs
 import de.westnordost.streetcomplete.data.UnsyncedChangesCountSource
@@ -304,10 +303,10 @@ class MainViewModelImpl(
         awaitClose { userLoginSource.removeListener(listener) }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    override val isConnected: Boolean get() = internetConnectionState.isConnected || BuildConfig.DEBUG
+    override val isConnected: Boolean get() = internetConnectionState.isConnected || ApplicationConstants.DEBUG
 
     override fun upload() {
-        if (isLoggedIn.value || BuildConfig.DEBUG) {
+        if (isLoggedIn.value || ApplicationConstants.DEBUG) {
             uploadController.upload(isUserInitiated = true)
         } else {
             isRequestingLogin.value = true

@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.data.osm.edits.upload
 
-import de.westnordost.streetcomplete.BuildConfig
 import de.westnordost.streetcomplete.ApplicationConstants
 import de.westnordost.streetcomplete.ApplicationConstants.EDIT_ACTIONS_NOT_ALLOWED_TO_USE_LOCAL_CHANGES
 import de.westnordost.streetcomplete.data.ConflictException
@@ -33,7 +32,7 @@ class ElementEditUploader(
         val mustUseRemoteData = edit.action::class in EDIT_ACTIONS_NOT_ALLOWED_TO_USE_LOCAL_CHANGES
 
         // fake upload in debug mode: create pseudo-random new (positive!) ids that are unlikely to clash with real ids
-        if (BuildConfig.DEBUG && !UserLoginController.loggedIn) {
+        if (ApplicationConstants.DEBUG && !UserLoginController.loggedIn) {
             val localChanges = edit.action.createUpdates(mapDataController, getIdProvider())
             val creationsByNewId = localChanges.creations.associateBy { Long.MAX_VALUE - Int.MAX_VALUE + it.hashCode() }
             val updates = MapDataUpdates(
