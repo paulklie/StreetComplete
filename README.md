@@ -84,6 +84,7 @@ SCEE asks for two more permissions than StreetComplete: `ACCESS_BACKGROUND_LOCAT
   * Show POI quests with the sole purpose of indicating existence of elements of chosen type (may show labels)
   * Option to show only quests added in SCEE in quest selection menu
   * Some "other answers" result in a modified changeset comment (because in SCEE they may contain more unexpected changes)
+  * Crossing markings quest now allows specifying the markings instead of yes / no (adjust in quest settings)
 * Customizable overlays: Choose which elements are highlighted, and which tag is used to determine the color
 * ~Turn restriction overlay~ currently not working
 * Settings
@@ -124,7 +125,7 @@ SCEE asks for two more permissions than StreetComplete: `ACCESS_BACKGROUND_LOCAT
     * Capitalize words when entering names
     * Zoom using volume buttons
   * Display settings
-    * Disable 3D buildings (currently not available, as 3D buildings are disabled in general with since the MapLibre switch)
+    * ~Disable 3D buildings~ currently not available, as 3D buildings are disabled in general with since the MapLibre switch
     * Show arrows indicating direction of highlighted way
     * Highlight geometries for nearby quests
     * Disable quest solved animation
@@ -171,8 +172,7 @@ This section is aimed for people trying to decide whether a bad edit done in SCE
 In general, SCEE changesets will contain changes very similar to StreetComplete changesets, with following differences:
 * `created_by` is set to `StreetComplete_ee <version>`
 * _AddBuildingType_ has additional answers `barn`, `sty`, `stable`, `cowshed`, `digester`, `presbytery`, `riding_hall`, `sports_hall`, `tent`, `elevator`, and `transformer_tower`
-* _AddCrossingType_ may change `crossing_ref`, `crossing:markings`, and `traffic_calming`
-* _AddPathSurface_ and _AddRoadSurface_ have additional surfaces `metal_grid` and `stepping_stones`
+* _AddPathSurface_ and _AddRoadSurface_ have additional surfaces `metal_grid`, `stepping_stones` and `chipseal`
 * _AddMaxSpeed_ may tag `maxspeed:conditional`
 * [Discardable tags](https://wiki.openstreetmap.org/wiki/Discardable_tags) are removed automatically 
 * Any node may be moved, even if it is part of a way or relation

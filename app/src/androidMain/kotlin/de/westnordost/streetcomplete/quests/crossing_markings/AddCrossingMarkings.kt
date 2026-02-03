@@ -78,7 +78,7 @@ class AddCrossingMarkings : OsmElementQuestType<Set<CrossingMarkings>>, AndroidQ
                 prefs.putBoolean(PREF_CROSSING_MARKING_EXTENDED, true)
             }
             .setNegativeButton(R.string.quest_generic_hasFeature_no) { _, _ ->
-                prefs.putBoolean(PREF_CROSSING_MARKING_EXTENDED, false)
+                prefs.remove(PREF_CROSSING_MARKING_EXTENDED)
             }
             .create()
 
