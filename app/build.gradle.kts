@@ -8,7 +8,7 @@ import java.util.Properties
 
 
 /** App version name, code and flavor */
-val appVersionName = "62.21"
+val appVersionName = "62.21-alpha1"
 val appVersionCode = 6204
 
 /** Localizations the app should be available in */
@@ -486,5 +486,5 @@ tasks.register("copyDefaultStringsToEnStrings") {
 tasks.register<GenerateTagSuggestions>("generateTagSuggestions") {
     group = "streetcomplete"
     version = presetsVersion
-    targetDir = "$projectDir/src/main/assets/tag_editor"
+    targetDir = "$projectDir/src/androidMain/assets/tag_editor"
 }
