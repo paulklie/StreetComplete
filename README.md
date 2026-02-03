@@ -39,19 +39,17 @@ SCEE asks for two more permissions than StreetComplete: `ACCESS_BACKGROUND_LOCAT
 * Non-optional differences to StreetComplete
   * No star count on main screen
   * When using auto-upload, an indicator now shows when there are changes waiting to be uploaded
-  * Dark theme uses dark buttons
-  * Prevent short scroll to user location at app start when map was at a different position
   * Downloading data will interrupt upload queue (will resume afterwards)
   * Manual downloads can be queued instead of always cancelling the previous one
   * Additional answers for some quests
     * Additional building types
     * Additional path surfaces
     * Specify that a crossing is raised
-    * Answer non-marked lanes with a count
     * Answer "no seating, but not takeaway only"
     * Add wheelchair description when answering wheelchair quest
   * Move the "no cycleway" answer to more accessible position
   * Highlight obstacles along the way for smoothness quests
+  * Open main menu when pressing menu key
   * Open settings when pressing menu key in main menu dialog
   * Allow switching to aerial view while adding or moving a node
 * New quests that are not eligible for StreetComplete, usually because some answers cannot be tagged, or because not everyone has the required knowledge to answer the quest. These quests can only be enabled when expert mode is on.
@@ -73,7 +71,7 @@ SCEE asks for two more permissions than StreetComplete: `ACCESS_BACKGROUND_LOCAT
   * Whether a barrier is locked
   * Height of barriers
   * Whether pharmacy is dispensing prescription drugs
-  * Destination of some road types after intersections
+  * ~Destination of some road types after intersections~ currently not working
   * Which beers are sold in restaurants
   * Elevation, ref, sports and name of guideposts
   * Width of footways
@@ -87,7 +85,7 @@ SCEE asks for two more permissions than StreetComplete: `ACCESS_BACKGROUND_LOCAT
   * Option to show only quests added in SCEE in quest selection menu
   * Some "other answers" result in a modified changeset comment (because in SCEE they may contain more unexpected changes)
 * Customizable overlays: Choose which elements are highlighted, and which tag is used to determine the color
-* Turn restriction overlay
+* ~Turn restriction overlay~ currently not working
 * Settings
   * Additional darker dark theme
   * Background map can be changed to aerial / satellite imagery
