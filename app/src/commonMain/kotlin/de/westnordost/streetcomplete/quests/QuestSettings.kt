@@ -9,6 +9,25 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.material.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.fromHtml
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
 import androidx.core.text.HtmlCompat
 import androidx.core.widget.doAfterTextChanged
 import com.github.difflib.text.DiffRow.Tag
@@ -21,6 +40,8 @@ import de.westnordost.streetcomplete.data.elementfilter.ParseException
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmFilterQuestType
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmQuestController
+import de.westnordost.streetcomplete.ui.common.dialogs.InfoDialog
+import de.westnordost.streetcomplete.ui.common.dialogs.ScrollableAlertDialog
 import de.westnordost.streetcomplete.util.ktx.dpToPx
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -30,7 +51,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.regex.PatternSyntaxException
 
-// todo: all this is not multi-platform at all, but it compiles for android, so...
+// todo: most of this is not multi-platform
 
 fun OsmElementQuestType<*>.getPrefixedFullElementSelectionPref(prefs: Preferences) = "${questPrefix(prefs)}qs_${name}_full_element_selection"
 
@@ -46,9 +67,7 @@ fun getLabelSources(defaultValue: String, questType: OsmFilterQuestType<*>, pref
 
 fun getPrefixedLabelSourcePref(questType: OsmElementQuestType<*>, prefs: Preferences) = "${questPrefix(prefs)}qs_${questType.name}_label_sources"
 
-/** For setting full element selection.
- *  This will check validity of input and only allow saving selection can be parsed.
- */
+// old dialog, to be removed
 fun fullElementSelectionDialog(context: Context, prefs: Preferences, pref: String, messageId: Int, defaultValue: String): AlertDialog {
     val textInput = EditText(context)
     val checkPrefix = if (pref.endsWith("_full_element_selection")) "" else "nodes with "
@@ -103,12 +122,134 @@ fun fullElementSelectionDialog(context: Context, prefs: Preferences, pref: Strin
     return dialog
 }
 
+/**
+ *  For setting full element selection.
+ *  This will check validity of input and only allow saving selection can be parsed.
+ */
+@Composable
+fun FullElementSelectionDialog(prefs: Preferences, pref: String, messageId: Int, defaultValue: String, onDismissRequest: () -> Unit) {
+    val checkPrefix = if (pref.endsWith("_full_element_selection")) "" else "nodes with "
+    // layout:
+    //  message with link (html iirc)
+    //  text field with content
+    //  if changes: highlight changes button
+    //  reset / cancel / ok buttons
+    // und dann noch der toastyJob
+
+    var text by remember {
+        mutableStateOf(TextFieldValue(prefs.getString(pref, defaultValue.trimIndent())))
+    }
+    var isOk by remember { mutableStateOf(true) }
+    val ctx = LocalContext.current
+    ScrollableAlertDialog(
+        onDismissRequest = onDismissRequest,
+        content = {
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                Text(
+                    text = AnnotatedString.fromHtml(stringResource(messageId)),
+                    style = MaterialTheme.typography.body1
+                )
+                TextField(
+                    value = text,
+                    onValueChange = {
+                        isOk = checkText(it.text, checkPrefix, ctx)
+                        text = it
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = false
+                )
+                if (prefs.contains(pref))
+                    DiffButton(defaultValue) { text.text }
+            }
+        },
+        buttons = {
+            TextButton(
+                onClick = {
+                    prefs.remove(pref)
+                    OsmQuestController.reloadQuestTypes()
+                    onDismissRequest()
+                },
+                enabled = prefs.contains(pref),
+                modifier = Modifier.padding(end = 16.dp)
+            ) {
+                Text(stringResource(R.string.quest_settings_reset))
+            }
+            TextButton(onDismissRequest) { Text(stringResource(android.R.string.cancel)) }
+            TextButton(
+                onClick = {
+                    if (text.text != prefs.getString(pref, defaultValue.trimIndent())) {
+                        prefs.putString(pref, text.text)
+                        OsmQuestController.reloadQuestTypes()
+                    }
+                    onDismissRequest()
+                },
+                enabled = isOk
+            ) {
+                Text(stringResource(android.R.string.ok))
+            }
+        },
+    )
+}
+
+private fun checkText(text: String, checkPrefix: String, context: Context): Boolean {
+    val isValidFilterExpression by lazy {
+        try {
+            (checkPrefix + text).toElementFilterExpression()
+            toastyJob?.cancel()
+            true
+        } catch(e: ParseException) {
+            delayedToast(e.message, context)
+            false
+        } catch(e: PatternSyntaxException) {
+            delayedToast(e.message, context)
+            false
+        }
+    }
+    // check other stuff first, because creation filter expression is relatively slow
+    return (checkPrefix.isEmpty() || text.lowercase().matches(elementSelectionRegex))
+        && text.count { c -> c == '('} == text.count { c -> c == ')'}
+        && (text.contains('=') || text.contains('~') || text.contains('!'))
+        && isValidFilterExpression
+}
+
 private var toastyJob: Job? = null
 private fun delayedToast(message: String?, context: Context) {
     toastyJob?.cancel()
     toastyJob = GlobalScope.launch(Dispatchers.IO) {
         delay(3000)
         withContext(Dispatchers.Main) { Toast.makeText(context, "Error: $message", Toast.LENGTH_LONG).show() }
+    }
+}
+
+@Composable
+private fun DiffButton(defaultText: String, getCurrentText: () -> String) {
+    var showDialog by remember { mutableStateOf(false) }
+    androidx.compose.material.Button({
+        showDialog = true
+    }, modifier = Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.quest_settings_highlight_changes_button))
+    }
+    if (showDialog) {
+        val drg = DiffRowGenerator.create()
+            .showInlineDiffs(true)
+            .mergeOriginalRevised(true)
+            .inlineDiffByWord(true)
+            .ignoreWhiteSpaces(true)
+            .oldTag { f -> if (f) "<b><i><del>" else "</del></i></b>" }
+            .newTag { f -> if (f) "<b><u><ins>" else "</ins></u></b>" }
+            .build()
+        val thatSpace = " "
+        val newDefault = defaultText.replace("|", "$thatSpace|$thatSpace") // replace with (nearly) invisible space, so word differences are used
+        val newCurrent = getCurrentText().replace("|", "$thatSpace|$thatSpace")
+        val diffRows = drg.generateDiffRows(newDefault.split("\n"), newCurrent.split("\n"))
+        val diffText = diffRows.mapNotNull {
+            if (it.tag == Tag.EQUAL) return@mapNotNull null
+            it.oldLine
+        }.joinToString("<br>")
+        InfoDialog(
+            onDismissRequest = { showDialog = false },
+            text = { Text(AnnotatedString.fromHtml(diffText), style = MaterialTheme.typography.body1) }
+        )
     }
 }
 

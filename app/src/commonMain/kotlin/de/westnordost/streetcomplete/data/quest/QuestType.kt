@@ -31,13 +31,14 @@ interface QuestType : EditType {
     val dayNightCycle: DayNightCycle get() = DayNightCycle.DAY_AND_NIGHT
 
     fun getQuestSettingsDialog(context: Context): AlertDialog? = null // todo: should be composable
+
     val hasQuestSettings: Boolean get() = false
+
     @Composable
     fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
         getQuestSettingsDialog(context)?.show()
         onDismissRequest()
     }
-
 
     /** color of the dot, which is used instead of a quest pin */
     val dotColor: String? get() = null
