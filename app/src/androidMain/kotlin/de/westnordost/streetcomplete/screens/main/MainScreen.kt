@@ -76,6 +76,7 @@ import de.westnordost.streetcomplete.screens.main.errors.LastCrashEffect
 import de.westnordost.streetcomplete.screens.main.errors.LastDownloadErrorEffect
 import de.westnordost.streetcomplete.screens.main.errors.LastUploadErrorEffect
 import de.westnordost.streetcomplete.screens.main.messages.MessageDialog
+import de.westnordost.streetcomplete.screens.main.overlays.OverlayQuickSelector
 import de.westnordost.streetcomplete.screens.main.overlays.OverlaySelectionDropdownMenu
 import de.westnordost.streetcomplete.screens.main.teammode.TeamModeWizard
 import de.westnordost.streetcomplete.screens.main.urlconfig.ApplyUrlConfigEffect
@@ -162,6 +163,7 @@ fun MainScreen(
 
     val showQuickSettings by viewModel.showQuickSettings.collectAsState()
     var showQuickSettingsMenu by remember { mutableStateOf(false) }
+    val showOverlaySelector by viewModel.showOverlaySelector.collectAsState()
 
     var showOverlaysDropdown by remember { mutableStateOf(false) }
     var showOverlaysTutorial by remember { mutableStateOf(false) }
@@ -266,38 +268,50 @@ fun MainScreen(
             }
 
             // top-end controls
-            Row(
+            Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                AnimatedVisibility(hasMessages) {
-                    MessagesButton(
-                        onClick = ::onClickMessages,
-                        messagesCount = messagesCount
-                    )
-                }
-                if (overlays.isNotEmpty()) {
-                    Box {
-                        OverlaySelectionButton(
-                            onClick = ::onClickOverlays,
-                            overlay = selectedOverlay
-                        )
-                        OverlaySelectionDropdownMenu(
-                            expanded = showOverlaysDropdown,
-                            onDismissRequest = { showOverlaysDropdown = false },
-                            overlays = overlays,
-                            onSelect = { viewModel.selectOverlay(it) }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AnimatedVisibility(hasMessages) {
+                        MessagesButton(
+                            onClick = ::onClickMessages,
+                            messagesCount = messagesCount
                         )
                     }
-                }
+                    if (overlays.isNotEmpty()) {
+                        Box {
+                            OverlaySelectionButton(
+                                onClick = ::onClickOverlays,
+                                overlay = selectedOverlay
+                            )
+                            OverlaySelectionDropdownMenu(
+                                expanded = showOverlaysDropdown,
+                                onDismissRequest = { showOverlaysDropdown = false },
+                                overlays = overlays,
+                                onSelect = { viewModel.selectOverlay(it) }
+                            )
+                        }
+                    }
 
-                MainMenuButton(
-                    onClick = { showMainMenuDialog = true },
-                    unsyncedEditsCount = if (!isAutoSync) unsyncedEditsCount else 0,
-                    indexInTeam = if (isTeamMode) indexInTeam else null
-                )
+                    MainMenuButton(
+                        onClick = { showMainMenuDialog = true },
+                        unsyncedEditsCount = if (!isAutoSync) unsyncedEditsCount else 0,
+                        indexInTeam = if (isTeamMode) indexInTeam else null
+                    )
+                }
+                if (showOverlaySelector)
+                    // todo: avoid overlap with bottom controls
+                    OverlayQuickSelector(
+                        overlays = overlays,
+                        selectedOverlay = selectedOverlay,
+                        modifier = Modifier.align(Alignment.End),
+                        onOverlaySelected = { viewModel.selectOverlay(it) }
+                    )
             }
 
             // bottom controls

@@ -1,5 +1,6 @@
 package de.westnordost.streetcomplete.screens.main
 
+import android.content.SharedPreferences
 import android.content.res.Resources
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
@@ -187,7 +188,15 @@ class MainViewModelImpl(
             }
         }
         visibleEditTypeSource.addListener(listener)
-        awaitClose { visibleEditTypeSource.removeListener(listener) }
+        val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key != null && key.startsWith("custom_overlay") && key != Prefs.CUSTOM_OVERLAY_SELECTED_INDEX)
+                trySend(getVisibleOverlays())
+        }
+        Prefs.sharedPreferences.registerOnSharedPreferenceChangeListener(prefListener)
+        awaitClose {
+            visibleEditTypeSource.removeListener(listener)
+            Prefs.sharedPreferences.unregisterOnSharedPreferenceChangeListener(prefListener)
+        }
     }.stateIn(viewModelScope + IO, SharingStarted.Eagerly, getVisibleOverlays())
 
     private fun getVisibleOverlays(): List<Overlay> =
@@ -432,6 +441,11 @@ class MainViewModelImpl(
         val listener = prefs.onShowQuickSettingsChanged { trySend(it) }
         awaitClose { listener.deactivate() }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, prefs.showQuickSettings)
+    override val showOverlaySelector = callbackFlow {
+        send(prefs.showOverlaySelector)
+        val listener = prefs.onShowOverlaySelectorChanged { trySend(it) } // todo: later also consider whether we're showing a bottom sheet
+        awaitClose { listener.deactivate() }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, prefs.showOverlaySelector)
     override val reverseQuestOrder = MutableStateFlow(false)
     override val showMainMenuDialog = mutableStateOf(false)
 
