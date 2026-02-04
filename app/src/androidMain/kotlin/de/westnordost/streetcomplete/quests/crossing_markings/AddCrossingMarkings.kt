@@ -75,6 +75,7 @@ class AddCrossingMarkings : OsmElementQuestType<Set<CrossingMarkings>>, AndroidQ
         BooleanQuestSettingsDialog(
             prefs,
             PREF_CROSSING_MARKING_EXTENDED,
+            false,
             R.string.pref_quest_pedestrian_crossing_markings_extended,
             R.string.quest_generic_hasFeature_yes,
             R.string.quest_generic_hasFeature_no,

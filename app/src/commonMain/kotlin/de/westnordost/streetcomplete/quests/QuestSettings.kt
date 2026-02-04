@@ -309,25 +309,37 @@ private fun DiffButton(defaultText: String, getCurrentText: () -> String) {
     }
 }
 
-// todo: have default setting and remove if default
-@Composable fun BooleanQuestSettingsDialog
-        (prefs: Preferences,
-         pref: String,
-         messageId: Int,
-         answerYes: Int,
-         answerNo: Int,
-         onDismissRequest: () -> Unit
+@Composable fun BooleanQuestSettingsDialog(
+    prefs: Preferences,
+    key: String,
+    default: Boolean,
+    messageId: Int,
+    answerTrue: Int,
+    answerFalse: Int,
+    onDismissRequest: () -> Unit
 ) {
     InfoDialog(
         onDismissRequest = onDismissRequest,
         title = { Text(stringResource(messageId)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button({ prefs.putBoolean(pref, true); onDismissRequest() }, Modifier.fillMaxWidth()) {
-                    Text(stringResource(answerYes), textAlign = TextAlign.Center)
+                Button(
+                    {
+                        if (default) prefs.remove(key) else prefs.putBoolean(key, true)
+                        onDismissRequest()
+                    },
+                    Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(answerTrue), textAlign = TextAlign.Center)
                 }
-                Button({ prefs.putBoolean(pref, false); onDismissRequest() }, Modifier.fillMaxWidth()) {
-                    Text(stringResource(answerNo), textAlign = TextAlign.Center)
+                Button(
+                    {
+                        if (!default) prefs.remove(key) else prefs.putBoolean(key, false)
+                        onDismissRequest()
+                    },
+                    Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(answerFalse), textAlign = TextAlign.Center)
                 }
             }
         }

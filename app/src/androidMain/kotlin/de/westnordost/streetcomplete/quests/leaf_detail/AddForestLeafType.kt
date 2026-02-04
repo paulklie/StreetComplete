@@ -68,6 +68,7 @@ class AddForestLeafType : OsmElementQuestType<ForestLeafType>, AndroidQuest {
         BooleanQuestSettingsDialog(
             prefs,
             SINGLE_TREES_PREF,
+            false,
             R.string.quest_settings_leaf_type_single_tree_message,
             R.string.quest_settings_leaf_type_single_tree_yes,
             R.string.quest_settings_leaf_type_single_tree_no,

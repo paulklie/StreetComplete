@@ -170,6 +170,7 @@ class AddLevel : OsmElementQuestType<String>, AndroidQuest {
         BooleanQuestSettingsDialog(
             prefs,
             questPrefix(prefs) + PREF_MORE_LEVELS,
+            false,
             R.string.quest_settings_level_title,
             R.string.quest_settings_level_more,
             R.string.quest_settings_level_default,

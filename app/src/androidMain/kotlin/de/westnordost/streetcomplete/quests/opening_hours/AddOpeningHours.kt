@@ -260,6 +260,7 @@ mapOf(
             BooleanQuestSettingsDialog(
                 prefs,
                 RESURVEY_ALL_OPENING_HOURS,
+                false,
                 R.string.quest_settings_resurvey_all_opening_hours_message,
                 R.string.quest_settings_resurvey_all_opening_hours_yes,
                 R.string.quest_settings_resurvey_all_opening_hours_no

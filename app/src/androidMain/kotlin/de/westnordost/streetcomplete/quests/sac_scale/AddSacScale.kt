@@ -69,6 +69,7 @@ class AddSacScale : OsmElementQuestType<SacScale>, AndroidQuest {
         BooleanQuestSettingsDialog(
             prefs,
             questPrefix(prefs) + PREF_SAC_SCALE_WITHOUT_RELATION,
+            false,
             R.string.pref_quest_sac_scale_without_relation,
             R.string.quest_generic_hasFeature_yes,
             R.string.quest_generic_hasFeature_no,
