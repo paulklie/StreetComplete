@@ -263,6 +263,13 @@ android {
     namespace = "de.westnordost.streetcomplete"
     compileSdk = 36
 
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
+    }
+
     defaultConfig {
         applicationId = "de.westnordost.streetcomplete.expert"
         minSdk = 25
