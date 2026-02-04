@@ -20,40 +20,6 @@ import de.westnordost.streetcomplete.util.dialogs.setViewWithDefaultPadding
 // quests settings should follow the pattern: qs_<quest_name>_<something>, e.g. "qs_AddLevel_more_levels"
 // when to call reloadQuestTypes: if whatever is changed is not read from settings every time, or if dynamic quest creation is enabled
 
-/** for setting values of a single key, comma separated */
-fun singleTypeElementSelectionDialog(
-    context: Context,
-    prefs: Preferences,
-    pref: String,
-    defaultValue: String,
-    messageId: Int,
-    onChanged: () -> Unit = { OsmQuestController.reloadQuestTypes() }
-): AlertDialog {
-    val textInput = EditText(context)
-    val dialog = dialog(context, messageId, prefs.getString(pref, defaultValue)!!.replace("|",", "), textInput)
-        .setPositiveButton(android.R.string.ok) { _, _ ->
-            val prefText = textInput.text.toString().split(",").joinToString("|") { it.trim() }
-            if (prefs.getString(pref, defaultValue) == prefText) return@setPositiveButton
-            prefs.putString(pref, prefText)
-            onChanged()
-        }
-        .setNeutralButton(R.string.quest_settings_reset) { _, _ ->
-            prefs.remove(pref)
-            onChanged()
-        }
-        .create()
-    textInput.doAfterTextChanged {
-        val button = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-        button?.isEnabled = textInput.text.toString().let {
-            it.lowercase().matches(valueRegex)
-                && !it.trim().endsWith(',')
-                && !it.contains(",,")
-                && it.isNotEmpty() }
-    }
-    dialog.setOnShowListener { dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.isEnabled = prefs.contains(pref) }
-    return dialog
-}
-
 /** for setting values of a single number */
 fun numberSelectionDialog(context: Context, prefs: Preferences, pref: String, defaultValue: Int, messageId: Int): AlertDialog {
     val numberInput = EditText(context)
@@ -121,5 +87,3 @@ fun getLabelOrElementSelectionDialog(context: Context, questType: OsmFilterQuest
     d.setOnShowListener { d.getButton(AlertDialog.BUTTON_NEUTRAL)?.isEnabled = prefs.contains(prefWithPrefix) } // disable reset button if setting is default
     return d
 }
-
-private val valueRegex = "[a-z\\d_?,/\\s]+".toRegex()

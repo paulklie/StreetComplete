@@ -10,6 +10,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
@@ -122,6 +123,55 @@ fun fullElementSelectionDialog(context: Context, prefs: Preferences, pref: Strin
     return dialog
 }
 
+/** for setting values of a single key, comma separated */
+@Composable fun SingleTypeElementSelectionDialog(
+    prefs: Preferences,
+    pref: String,
+    defaultValue: String,
+    messageId: Int,
+    onDismissRequest: () -> Unit,
+    onChanged: () -> Unit = { OsmQuestController.reloadQuestTypes() },
+) {
+    var text by remember {
+        mutableStateOf(TextFieldValue(prefs.getString(pref, defaultValue).replace("|",", ")))
+    }
+    var isOk by remember { mutableStateOf(true) }
+    ScrollableAlertDialog(
+        onDismissRequest = onDismissRequest,
+        content = {
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                Text(
+                    text = AnnotatedString.fromHtml(stringResource(messageId)),
+                    style = MaterialTheme.typography.body1
+                )
+                TextField(
+                    value = text,
+                    onValueChange = {
+                        isOk = checkValueText(it.text)
+                        text = it
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = false
+                )
+            }
+        },
+        buttons = {
+            ResetCancelOk(
+                onDismissRequest = onDismissRequest,
+                resetEnabled = prefs.contains(pref),
+                onReset = { prefs.remove(pref); onChanged() },
+                okEnabled = isOk,
+                onOk = {
+                    val prefText = text.text.split(",").joinToString("|") { it.trim() }
+                    if (prefs.getString(pref, defaultValue) == prefText) return@ResetCancelOk
+                    prefs.putString(pref, prefText)
+                    onChanged()
+                }
+            )
+        },
+    )
+}
+
 /**
  *  For setting full element selection.
  *  This will check validity of input and only allow saving selection can be parsed.
@@ -129,13 +179,6 @@ fun fullElementSelectionDialog(context: Context, prefs: Preferences, pref: Strin
 @Composable
 fun FullElementSelectionDialog(prefs: Preferences, pref: String, messageId: Int, defaultValue: String, onDismissRequest: () -> Unit) {
     val checkPrefix = if (pref.endsWith("_full_element_selection")) "" else "nodes with "
-    // layout:
-    //  message with link (html iirc)
-    //  text field with content
-    //  if changes: highlight changes button
-    //  reset / cancel / ok buttons
-    // und dann noch der toastyJob
-
     var text by remember {
         mutableStateOf(TextFieldValue(prefs.getString(pref, defaultValue.trimIndent())))
     }
@@ -163,61 +206,42 @@ fun FullElementSelectionDialog(prefs: Preferences, pref: String, messageId: Int,
             }
         },
         buttons = {
-            TextButton(
-                onClick = {
-                    prefs.remove(pref)
-                    OsmQuestController.reloadQuestTypes()
-                    onDismissRequest()
-                },
-                enabled = prefs.contains(pref),
-                modifier = Modifier.padding(end = 16.dp)
-            ) {
-                Text(stringResource(R.string.quest_settings_reset))
-            }
-            TextButton(onDismissRequest) { Text(stringResource(android.R.string.cancel)) }
-            TextButton(
-                onClick = {
+            ResetCancelOk(
+                onDismissRequest = onDismissRequest,
+                resetEnabled = prefs.contains(pref),
+                onReset = { prefs.remove(pref); OsmQuestController.reloadQuestTypes() },
+                okEnabled = isOk,
+                onOk = {
                     if (text.text != prefs.getString(pref, defaultValue.trimIndent())) {
                         prefs.putString(pref, text.text)
                         OsmQuestController.reloadQuestTypes()
                     }
-                    onDismissRequest()
-                },
-                enabled = isOk
-            ) {
-                Text(stringResource(android.R.string.ok))
-            }
+                }
+            )
         },
     )
 }
 
-private fun checkText(text: String, checkPrefix: String, context: Context): Boolean {
-    val isValidFilterExpression by lazy {
-        try {
-            (checkPrefix + text).toElementFilterExpression()
-            toastyJob?.cancel()
-            true
-        } catch(e: ParseException) {
-            delayedToast(e.message, context)
-            false
-        } catch(e: PatternSyntaxException) {
-            delayedToast(e.message, context)
-            false
-        }
+@Composable fun FlowRowScope.ResetCancelOk(
+    onDismissRequest: () -> Unit,
+    resetEnabled: Boolean,
+    onReset: () -> Unit,
+    okEnabled: Boolean,
+    onOk: () -> Unit
+) {
+    TextButton(
+        onClick = { onReset(); onDismissRequest() },
+        enabled = resetEnabled,
+        modifier = Modifier.padding(end = 16.dp)
+    ) {
+        Text(stringResource(R.string.quest_settings_reset))
     }
-    // check other stuff first, because creation filter expression is relatively slow
-    return (checkPrefix.isEmpty() || text.lowercase().matches(elementSelectionRegex))
-        && text.count { c -> c == '('} == text.count { c -> c == ')'}
-        && (text.contains('=') || text.contains('~') || text.contains('!'))
-        && isValidFilterExpression
-}
-
-private var toastyJob: Job? = null
-private fun delayedToast(message: String?, context: Context) {
-    toastyJob?.cancel()
-    toastyJob = GlobalScope.launch(Dispatchers.IO) {
-        delay(3000)
-        withContext(Dispatchers.Main) { Toast.makeText(context, "Error: $message", Toast.LENGTH_LONG).show() }
+    TextButton(onDismissRequest) { Text(stringResource(android.R.string.cancel)) }
+    TextButton(
+        onClick = { onOk(); onDismissRequest() },
+        enabled = okEnabled
+    ) {
+        Text(stringResource(android.R.string.ok))
     }
 }
 
@@ -306,5 +330,41 @@ fun dialog(context: Context, messageId: Int, initialValue: String, input: EditTe
         .setNegativeButton(android.R.string.cancel, null)
 }
 
+private val valueRegex = "[a-z\\d_?,/\\s]+".toRegex()
+private fun checkValueText(text: String) =
+    text.lowercase().matches(valueRegex)
+        && !text.trim().endsWith(',')
+        && !text.contains(",,")
+        && text.isNotEmpty()
+
 // relax a little bit? but e.g. A-Z is very uncommon and might lead to mistakes
 private val elementSelectionRegex = "[a-z\\d_=!?\"~*\\[\\]()|:.,<>\\s+-]+".toRegex()
+private fun checkText(text: String, checkPrefix: String, context: Context): Boolean {
+    val isValidFilterExpression by lazy {
+        try {
+            (checkPrefix + text).toElementFilterExpression()
+            toastyJob?.cancel()
+            true
+        } catch(e: ParseException) {
+            delayedToast(e.message, context)
+            false
+        } catch(e: PatternSyntaxException) {
+            delayedToast(e.message, context)
+            false
+        }
+    }
+    // check other stuff first, because creation filter expression is relatively slow
+    return (checkPrefix.isEmpty() || text.lowercase().matches(elementSelectionRegex))
+        && text.count { c -> c == '('} == text.count { c -> c == ')'}
+        && (text.contains('=') || text.contains('~') || text.contains('!'))
+        && isValidFilterExpression
+}
+
+private var toastyJob: Job? = null
+private fun delayedToast(message: String?, context: Context) {
+    toastyJob?.cancel()
+    toastyJob = GlobalScope.launch(Dispatchers.IO) {
+        delay(3000)
+        withContext(Dispatchers.Main) { Toast.makeText(context, "Error: $message", Toast.LENGTH_LONG).show() }
+    }
+}
