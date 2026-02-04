@@ -51,6 +51,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.regex.PatternSyntaxException
 
+// restarts are typically necessary on changes of element selection because the filter is created by lazy
+// quests settings should follow the pattern: qs_<quest_name>_<something>, e.g. "qs_AddLevel_more_levels"
+// when to call reloadQuestTypes: if whatever is changed is not read from settings every time, or if dynamic quest creation is enabled
+
 fun OsmElementQuestType<*>.getPrefixedFullElementSelectionPref(prefs: Preferences) = "${questPrefix(prefs)}qs_${name}_full_element_selection"
 
 fun questPrefix(prefs: Preferences) = if (prefs.getBoolean(Prefs.QUEST_SETTINGS_PER_PRESET, false))
@@ -118,6 +122,55 @@ fun fullElementSelectionDialog(context: Context, prefs: Preferences, pref: Strin
         dialog.findViewById<TextView>(android.R.id.message)?.movementMethod = LinkMovementMethod.getInstance() // make the link actually open a browser
     }
     return dialog
+}
+
+@Composable fun LabelOrElementSelectionDialog(questType: OsmFilterQuestType<*>, prefs: Preferences, onDismissRequest: () -> Unit) {
+    val prefWithPrefix = getPrefixedLabelSourcePref(questType, prefs)
+    var text by remember {
+        mutableStateOf(TextFieldValue(prefs.getString(prefWithPrefix, questType.dotLabelSources.joinToString(", "))))
+    }
+    var showElementSelection by remember { mutableStateOf(false) }
+    ScrollableAlertDialog(
+        onDismissRequest = onDismissRequest,
+        content = {
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                Text(
+                    text = AnnotatedString.fromHtml(stringResource(R.string.quest_settings_dot_labels_message)),
+                    style = MaterialTheme.typography.body1
+                )
+                TextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = false
+                )
+                androidx.compose.material.Button({
+                    showElementSelection = true
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.element_selection_button))
+                }
+            }
+        },
+        buttons = {
+            ResetCancelOk(
+                onDismissRequest = onDismissRequest,
+                resetEnabled = prefs.contains(prefWithPrefix),
+                onReset = { prefs.remove(prefWithPrefix); OsmQuestController.reloadQuestTypes() },
+                okEnabled = true,
+                onOk = {
+                    prefs.putString(prefWithPrefix, text.text)
+                    OsmQuestController.reloadQuestTypes()
+                }
+            )
+        },
+    )
+    if (showElementSelection)
+        FullElementSelectionDialog(
+            prefs,
+            questType.getPrefixedFullElementSelectionPref(prefs),
+            R.string.quest_settings_element_selection,
+            questType.elementFilter
+        ) { showElementSelection = false }
 }
 
 /** for setting values of a single positive number */

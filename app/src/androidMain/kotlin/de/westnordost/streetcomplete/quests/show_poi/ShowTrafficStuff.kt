@@ -1,6 +1,7 @@
 package de.westnordost.streetcomplete.quests.show_poi
 
 import android.content.Context
+import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.osm.geometry.ElementGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.Element
@@ -8,9 +9,9 @@ import de.westnordost.streetcomplete.data.osm.mapdata.MapDataWithGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.filter
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmFilterQuestType
 import de.westnordost.streetcomplete.osm.Tags
-import de.westnordost.streetcomplete.quests.getLabelOrElementSelectionDialog
 import de.westnordost.streetcomplete.quests.getLabelSources
 import de.westnordost.streetcomplete.data.quest.AndroidQuest
+import de.westnordost.streetcomplete.quests.LabelOrElementSelectionDialog
 import de.westnordost.streetcomplete.resources.Res
 import de.westnordost.streetcomplete.resources.default_disabled_msg_poi_traffic
 
@@ -46,5 +47,8 @@ class ShowTrafficStuff : OsmFilterQuestType<Boolean>(), AndroidQuest {
             tags["traffic_calming"] = "table"
     }
 
-    override fun getQuestSettingsDialog(context: Context) = getLabelOrElementSelectionDialog(context, this, prefs)
+    @Composable
+    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+        LabelOrElementSelectionDialog(this, prefs, onDismissRequest)
+    }
 }
