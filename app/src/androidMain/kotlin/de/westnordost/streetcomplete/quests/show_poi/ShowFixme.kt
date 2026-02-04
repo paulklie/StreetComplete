@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.show_poi
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.osm.geometry.ElementGeometry
@@ -41,7 +40,7 @@ class ShowFixme : OsmFilterQuestType<Boolean>(), AndroidQuest {
 
     // actual ignoring of stuff happens when downloading
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         SingleTypeElementSelectionDialog(prefs, questPrefix(prefs) + PREF_FIXME_IGNORE, FIXME_IGNORE_DEFAULT, R.string.quest_settings_fixme_title, onDismissRequest)
     }
 }

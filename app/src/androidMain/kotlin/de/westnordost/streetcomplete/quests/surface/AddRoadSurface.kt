@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.surface
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.osm.geometry.ElementGeometry
@@ -62,7 +61,7 @@ class AddRoadSurface : OsmFilterQuestType<Surface>(), AndroidQuest {
     override val hasQuestSettings = true
 
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         FullElementSelectionDialog(prefs, "${questPrefix(prefs)}qs_${name}_element_selection", R.string.quest_settings_element_selection, highwaySelection, onDismissRequest)
     }
 }

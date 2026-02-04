@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.sidewalk
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
@@ -109,7 +108,7 @@ class AddSidewalk : OsmElementQuestType<Sides<Sidewalk>>, AndroidQuest {
 
     // min distance selection or element selection
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         SingleTypeElementSelectionDialog(
             prefs,
             questPrefix(prefs) + PREF_SIDEWALK_HIGHWAY_SELECTION,

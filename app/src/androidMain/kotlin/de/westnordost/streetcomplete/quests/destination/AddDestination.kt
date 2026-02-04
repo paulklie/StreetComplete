@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.destination
 
-import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression

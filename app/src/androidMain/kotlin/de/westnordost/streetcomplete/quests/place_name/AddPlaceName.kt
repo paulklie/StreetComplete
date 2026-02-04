@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.place_name
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.osmfeatures.Feature
 import de.westnordost.streetcomplete.R
@@ -84,7 +83,7 @@ class AddPlaceName(
     override val hasQuestSettings = true
 
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         FullElementSelectionDialog(prefs, questPrefix(prefs) + PREF_ELEMENTS, R.string.quest_settings_element_selection, NAME_PLACES, onDismissRequest)
     }
 }

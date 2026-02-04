@@ -1,9 +1,17 @@
 package de.westnordost.streetcomplete.quests.opening_hours
 
-import android.content.Context
 import de.westnordost.osm_opening_hours.parser.toOpeningHoursOrNull
-import de.westnordost.osmfeatures.Feature
-import androidx.appcompat.app.AlertDialog
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.Button
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.filters.RelativeDate
 import de.westnordost.streetcomplete.data.elementfilter.filters.TagOlderThan
@@ -19,9 +27,10 @@ import de.westnordost.streetcomplete.osm.isPlaceOrDisusedPlace
 import de.westnordost.streetcomplete.osm.opening_hours.parser.isSupportedOpeningHours
 import de.westnordost.streetcomplete.osm.updateCheckDateForKey
 import de.westnordost.streetcomplete.osm.updateWithCheckDate
-import de.westnordost.streetcomplete.quests.booleanQuestSettingsDialog
-import de.westnordost.streetcomplete.quests.fullElementSelectionDialog
+import de.westnordost.streetcomplete.quests.BooleanQuestSettingsDialog
+import de.westnordost.streetcomplete.quests.FullElementSelectionDialog
 import de.westnordost.streetcomplete.quests.getPrefixedFullElementSelectionPref
+import de.westnordost.streetcomplete.ui.common.dialogs.InfoDialog
 
 class AddOpeningHours() : OsmElementQuestType<OpeningHoursAnswer>, AndroidQuest {
 
@@ -229,22 +238,39 @@ mapOf(
 
     override val hasQuestSettings: Boolean = true
 
-    override fun getQuestSettingsDialog(context: Context) =
-        AlertDialog.Builder(context)
-            .setTitle(R.string.quest_settings_what_to_edit)
-            .setPositiveButton(R.string.quest_settings_resurvey_all_opening_hours_title) { _, _ ->
-                booleanQuestSettingsDialog(context, prefs, RESURVEY_ALL_OPENING_HOURS,
-                    R.string.quest_settings_resurvey_all_opening_hours_message,
-                    R.string.quest_settings_resurvey_all_opening_hours_yes,
-                    R.string.quest_settings_resurvey_all_opening_hours_no
-                ).show()
+    @Composable override fun QuestSettings(onDismissRequest: () -> Unit) {
+        var showResurveySelection by remember { mutableStateOf(false) }
+        var showElementSelection by remember { mutableStateOf(false) }
+        InfoDialog(
+            onDismissRequest = onDismissRequest,
+            title = { Text(stringResource(R.string.quest_settings_what_to_edit)) },
+            text = {
+                Column {
+                    Button({ showResurveySelection = true }, Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.quest_settings_resurvey_all_opening_hours_title))
+                    }
+                    Button({ showElementSelection = true }, Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.element_selection_button))
+                    }
+                }
             }
-            .setNegativeButton(R.string.element_selection_button) { _, _ ->
-                fullElementSelectionDialog(context, prefs, getPrefixedFullElementSelectionPref(prefs),
-                    R.string.quest_settings_element_selection, filterString
-                ).show()
-            }
-            .create()
+        )
+        if (showResurveySelection)
+            BooleanQuestSettingsDialog(
+                prefs,
+                RESURVEY_ALL_OPENING_HOURS,
+                R.string.quest_settings_resurvey_all_opening_hours_message,
+                R.string.quest_settings_resurvey_all_opening_hours_yes,
+                R.string.quest_settings_resurvey_all_opening_hours_no
+            ) { showResurveySelection = false }
+        if (showElementSelection)
+            FullElementSelectionDialog(
+                prefs,
+                getPrefixedFullElementSelectionPref(prefs),
+                R.string.quest_settings_element_selection,
+                filterString
+            ) { showElementSelection = false }
+    }
 }
 
 private const val RESURVEY_ALL_OPENING_HOURS = "qs_AddOpeningHours_resurvey_all"

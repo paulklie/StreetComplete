@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.step_count
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
@@ -63,7 +62,7 @@ class AddStepCount : OsmElementQuestType<Int>, AndroidQuest {
     override val hasQuestSettings = true
 
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         NumberSelectionDialog(prefs, questPrefix(prefs) + PREF_MAX_STEPS_LENGTH, 999, R.string.quest_settings_max_steps_length, onDismissRequest)
     }
 }

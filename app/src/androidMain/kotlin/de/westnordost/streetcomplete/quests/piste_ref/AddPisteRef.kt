@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.piste_ref
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
@@ -56,7 +55,7 @@ class AddPisteRef : OsmElementQuestType<PisteRefAnswer>, AndroidQuest {
     override val hasQuestSettings: Boolean = true
 
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         FullElementSelectionDialog(prefs, this.getPrefixedFullElementSelectionPref(prefs), R.string.quest_settings_element_selection, elementFilter, onDismissRequest)
     }
 }

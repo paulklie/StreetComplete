@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.show_poi
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.osm.geometry.ElementGeometry
@@ -48,7 +47,7 @@ class ShowTrafficStuff : OsmFilterQuestType<Boolean>(), AndroidQuest {
     }
 
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         LabelOrElementSelectionDialog(this, prefs, onDismissRequest)
     }
 }

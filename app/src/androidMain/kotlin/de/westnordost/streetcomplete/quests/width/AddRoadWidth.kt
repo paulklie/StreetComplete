@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.width
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
@@ -88,7 +87,7 @@ class AddRoadWidth(
     override val hasQuestSettings = true
 
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         FullElementSelectionDialog(prefs, questPrefix(prefs) + PREF_ROAD_WIDTH_ELEMENTS, R.string.quest_settings_element_selection, ROAD_SELECTION.trimIndent(), onDismissRequest)
     }
 }

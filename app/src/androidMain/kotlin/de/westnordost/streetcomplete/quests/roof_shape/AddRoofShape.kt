@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.roof_shape
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
@@ -76,7 +75,7 @@ class AddRoofShape(
     override val hasQuestSettings = true
 
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         NumberSelectionDialog(prefs, questPrefix(prefs) + PREF_ROOF_SHAPE_MAX_LEVELS, 99, R.string.quest_settings_max_roof_levels, onDismissRequest)
     }
 }

@@ -1,6 +1,5 @@
 package de.westnordost.streetcomplete.quests.piste_difficulty
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
@@ -54,7 +53,7 @@ class AddPisteDifficulty : OsmElementQuestType<PisteDifficulty>, AndroidQuest {
     override val hasQuestSettings: Boolean = true
 
     @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
+    override fun QuestSettings(onDismissRequest: () -> Unit) {
         FullElementSelectionDialog(prefs, this.getPrefixedFullElementSelectionPref(prefs), R.string.quest_settings_element_selection, elementFilter, onDismissRequest)
     }
 }

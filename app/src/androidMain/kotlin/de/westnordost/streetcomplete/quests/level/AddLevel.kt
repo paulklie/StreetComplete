@@ -1,7 +1,6 @@
 package de.westnordost.streetcomplete.quests.level
 
-import androidx.appcompat.app.AlertDialog
-import android.content.Context
+import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
 import de.westnordost.streetcomplete.data.osm.geometry.ElementGeometry
@@ -10,11 +9,11 @@ import de.westnordost.streetcomplete.data.osm.mapdata.Element
 import de.westnordost.streetcomplete.data.osm.mapdata.MapDataWithGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.filter
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmElementQuestType
-import de.westnordost.streetcomplete.data.osm.osmquests.OsmQuestController
 import de.westnordost.streetcomplete.data.quest.AndroidQuest
 import de.westnordost.streetcomplete.data.user.achievements.EditTypeAchievement.CITIZEN
 import de.westnordost.streetcomplete.osm.Tags
 import de.westnordost.streetcomplete.osm.isPlace
+import de.westnordost.streetcomplete.quests.BooleanQuestSettingsDialog
 import de.westnordost.streetcomplete.quests.questPrefix
 import de.westnordost.streetcomplete.util.math.contains
 import de.westnordost.streetcomplete.util.math.isInMultipolygon
@@ -167,19 +166,16 @@ class AddLevel : OsmElementQuestType<String>, AndroidQuest {
 
     override val hasQuestSettings = true
 
-    override fun getQuestSettingsDialog(context: Context): AlertDialog =
-        AlertDialog.Builder(context)
-            .setTitle(R.string.quest_settings_level_title)
-            .setNegativeButton(android.R.string.cancel, null)
-            .setItems(
-                arrayOf(context.getString(R.string.quest_settings_level_default), context.getString(R.string.quest_settings_level_more))
-            ) { _, i ->
-                if (i == 1) prefs.putBoolean(questPrefix(prefs) + PREF_MORE_LEVELS, true)
-                else prefs.remove(questPrefix(prefs) + PREF_MORE_LEVELS)
-                OsmQuestController.reloadQuestTypes()
-            }
-            .create()
-
+    @Composable override fun QuestSettings(onDismissRequest: () -> Unit) {
+        BooleanQuestSettingsDialog(
+            prefs,
+            questPrefix(prefs) + PREF_MORE_LEVELS,
+            R.string.quest_settings_level_title,
+            R.string.quest_settings_level_more,
+            R.string.quest_settings_level_default,
+            onDismissRequest
+        )
+    }
 }
 
 private fun Element.isDoctorWithoutLevel() = !tags.containsKey("level") && when (tags["amenity"]) {

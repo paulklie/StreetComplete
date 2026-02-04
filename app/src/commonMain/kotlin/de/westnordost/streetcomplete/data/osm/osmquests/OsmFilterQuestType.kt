@@ -1,7 +1,6 @@
 package de.westnordost.streetcomplete.data.osm.osmquests
 
 import android.content.Context
-import androidx.appcompat.app.AlertDialog
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
@@ -30,16 +29,7 @@ abstract class OsmFilterQuestType<T> : OsmElementQuestType<T> {
 
     override val hasQuestSettings: Boolean = true
 
-    override fun getQuestSettingsDialog(context: Context): AlertDialog? = null
-
-    @Composable
-    override fun QuestSettings(context: Context, onDismissRequest: () -> Unit) {
-        val oldDialog = getQuestSettingsDialog(context)
-        if (oldDialog != null) {
-            oldDialog.show()
-            onDismissRequest()
-            return
-        }
+    @Composable override fun QuestSettings(onDismissRequest: () -> Unit) {
         FullElementSelectionDialog(
             prefs,
             this.getPrefixedFullElementSelectionPref(prefs),
