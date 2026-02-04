@@ -43,7 +43,6 @@ import de.westnordost.streetcomplete.data.osm.osmquests.OsmFilterQuestType
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmQuestController
 import de.westnordost.streetcomplete.ui.common.dialogs.InfoDialog
 import de.westnordost.streetcomplete.ui.common.dialogs.ScrollableAlertDialog
-import de.westnordost.streetcomplete.util.ktx.dpToPx
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -51,8 +50,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.regex.PatternSyntaxException
-
-// todo: most of this is not multi-platform
 
 fun OsmElementQuestType<*>.getPrefixedFullElementSelectionPref(prefs: Preferences) = "${questPrefix(prefs)}qs_${name}_full_element_selection"
 
@@ -121,6 +118,49 @@ fun fullElementSelectionDialog(context: Context, prefs: Preferences, pref: Strin
         dialog.findViewById<TextView>(android.R.id.message)?.movementMethod = LinkMovementMethod.getInstance() // make the link actually open a browser
     }
     return dialog
+}
+
+/** for setting values of a single positive number */
+@Composable fun NumberSelectionDialog(prefs: Preferences, pref: String, defaultValue: Int, messageId: Int, onDismissRequest: () -> Unit) {
+    var text by remember {
+        mutableStateOf(TextFieldValue(prefs.getInt(pref, defaultValue).toString()))
+    }
+    var isOk by remember { mutableStateOf(true) }
+    ScrollableAlertDialog(
+        onDismissRequest = onDismissRequest,
+        content = {
+            Column(modifier = Modifier.padding(horizontal = 12.dp)) {
+                Text(
+                    text = AnnotatedString.fromHtml(stringResource(messageId)),
+                    style = MaterialTheme.typography.body1
+                )
+                TextField(
+                    value = text,
+                    onValueChange = {
+                        isOk = it.text.toIntOrNull()?.let { it > 0 } == true
+                        text = it
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+        },
+        buttons = {
+            ResetCancelOk(
+                onDismissRequest = onDismissRequest,
+                resetEnabled = prefs.contains(pref),
+                onReset = { prefs.remove(pref); OsmQuestController.reloadQuestTypes() },
+                okEnabled = isOk,
+                onOk = {
+                    val number = text.text.toIntOrNull() ?: return@ResetCancelOk
+                    if (number == prefs.getInt(pref, defaultValue)) return@ResetCancelOk
+                    prefs.putInt(pref, number)
+                    if (prefs.getBoolean(Prefs.DYNAMIC_QUEST_CREATION, false))
+                        OsmQuestController.reloadQuestTypes()
+                }
+            )
+        },
+    )
 }
 
 /** for setting values of a single key, comma separated */
@@ -320,7 +360,7 @@ fun booleanQuestSettingsDialog(context: Context, prefs: Preferences, pref: Strin
 
 fun dialog(context: Context, messageId: Int, initialValue: String, input: EditText): AlertDialog.Builder {
     input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-    val padding = context.resources.dpToPx(8).toInt()
+    val padding = 16
     input.setPadding(2 * padding, padding, 2 * padding, padding) // should be less than default padding to allow more text per line
     input.setText(initialValue)
     input.maxLines = 15 // if lines are not limited, the edit text might get so big that buttons are off screen (thanks, google for allowing this)
