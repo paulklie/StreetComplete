@@ -1,6 +1,16 @@
 package de.westnordost.streetcomplete.quests.sac_scale
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.Button
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
 import de.westnordost.streetcomplete.data.osm.geometry.ElementGeometry
@@ -14,9 +24,12 @@ import de.westnordost.streetcomplete.data.osm.osmquests.OsmElementQuestType
 import de.westnordost.streetcomplete.osm.Tags
 import de.westnordost.streetcomplete.data.quest.AndroidQuest
 import de.westnordost.streetcomplete.quests.BooleanQuestSettingsDialog
+import de.westnordost.streetcomplete.quests.FullElementSelectionDialog
+import de.westnordost.streetcomplete.quests.getPrefixedFullElementSelectionPref
 import de.westnordost.streetcomplete.quests.questPrefix
 import de.westnordost.streetcomplete.resources.Res
 import de.westnordost.streetcomplete.resources.default_disabled_msg_sacScale
+import de.westnordost.streetcomplete.ui.common.dialogs.InfoDialog
 
 class AddSacScale : OsmElementQuestType<SacScale>, AndroidQuest {
 
@@ -66,15 +79,39 @@ class AddSacScale : OsmElementQuestType<SacScale>, AndroidQuest {
     override val hasQuestSettings: Boolean = true
 
     @Composable override fun QuestSettings(onDismissRequest: () -> Unit) {
-        BooleanQuestSettingsDialog(
-            prefs,
-            questPrefix(prefs) + PREF_SAC_SCALE_WITHOUT_RELATION,
-            false,
-            R.string.pref_quest_sac_scale_without_relation,
-            R.string.quest_generic_hasFeature_yes,
-            R.string.quest_generic_hasFeature_no,
-            onDismissRequest
+        var showResurveySelection by remember { mutableStateOf(false) }
+        var showElementSelection by remember { mutableStateOf(false) }
+        InfoDialog(
+            onDismissRequest = onDismissRequest,
+            title = { Text(stringResource(R.string.quest_settings_what_to_edit)) },
+            text = {
+                Column {
+                    Button({ showResurveySelection = true }, Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.pref_quest_sac_scale_without_relation))
+                    }
+                    Button({ showElementSelection = true }, Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.element_selection_button))
+                    }
+                }
+            }
         )
+        if (showResurveySelection)
+            BooleanQuestSettingsDialog(
+                prefs,
+                questPrefix(prefs) + PREF_SAC_SCALE_WITHOUT_RELATION,
+                false,
+                R.string.pref_quest_sac_scale_without_relation,
+                R.string.quest_generic_hasFeature_yes,
+                R.string.quest_generic_hasFeature_no,
+                onDismissRequest
+            )
+        if (showElementSelection)
+            FullElementSelectionDialog(
+                prefs,
+                getPrefixedFullElementSelectionPref(prefs),
+                R.string.quest_settings_element_selection,
+                elementFilter
+            ) { showElementSelection = false }
     }
 
     private val isSacScaleWithoutRelation = prefs.getBoolean(questPrefix(prefs) + PREF_SAC_SCALE_WITHOUT_RELATION, false)
