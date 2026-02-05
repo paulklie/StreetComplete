@@ -11,6 +11,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import de.westnordost.osm_opening_hours.model.Month
+import de.westnordost.osm_opening_hours.model.MonthRange
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.databinding.ComposeViewBinding
 import de.westnordost.streetcomplete.osm.opening_hours.HierarchicOpeningHours
@@ -40,11 +42,23 @@ class AddBarrierLockedForm : AbstractOsmQuestForm<BarrierLockedAnswer>() {
             emptyList()
         }
 
-    override val otherAnswers = listOf(
+    override val otherAnswers get() = listOfNotNull(
         AnswerItem(R.string.quest_fee_answer_hours) {
             answer.value = LockedAtHours(TimeRestriction(
                 HierarchicOpeningHours(),TimeRestriction.Mode.ONLY_AT_HOURS
             ))
+        },
+        if (answer.value == null) null
+        else AnswerItem(R.string.quest_openingHours_answer_seasonal_opening_hours) {
+            val old = (answer.value as? LockedAtHours)?.timeRestriction
+                ?: TimeRestriction(HierarchicOpeningHours(),TimeRestriction.Mode.ONLY_AT_HOURS)
+            val allMonths = listOf(MonthRange(Month.January, Month.December))
+            val hours = HierarchicOpeningHours(
+                old.hours.monthsList.map { months ->
+                    if (months.selectors.isEmpty()) months.copy(selectors = allMonths) else months
+                }
+            )
+            answer.value = LockedAtHours(TimeRestriction(hours, old.mode))
         },
     )
 
