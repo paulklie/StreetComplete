@@ -660,7 +660,6 @@ fun getQuestTypeList(
     EE_QUEST_OFFSET + 8 to AddOutdoorSeatingType(),
     EE_QUEST_OFFSET + 51 to AddValves(),
 //    EE_QUEST_OFFSET + 25 to AddDestination(),
-    EE_QUEST_OFFSET + 22 to AddArtworkType(),
     EE_QUEST_OFFSET + 23 to AddRailwayPlatformRef(),
     EE_QUEST_OFFSET + 33 to AddTrailVisibility(),
     EE_QUEST_OFFSET + 48 to AddSacScale(),
