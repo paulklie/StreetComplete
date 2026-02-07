@@ -1097,7 +1097,7 @@ class MainActivity :
             binding.otherQuestsLayout.removeAllViews()
             binding.otherQuestsScrollView.visibility = View.GONE
         }
-        //todo: inform viewModel so we can show overlay selector
+        viewModel.showingBottomSheet.value = false
         clearHighlighting()
         unfreezeMap()
         mapFragment?.endFocus()
@@ -1108,7 +1108,7 @@ class MainActivity :
      *  played and the highlighting of the previous bottom sheet is cleared. */
     private fun showInBottomSheet(f: Fragment, clearPreviousHighlighting: Boolean = true) {
         currentFocus?.hideKeyboard()
-        //todo: inform viewModel so we can hide overlay selector
+        viewModel.showingBottomSheet.value = true
         freezeMap()
         if (bottomSheetFragment != null) {
             if (clearPreviousHighlighting) clearHighlighting()
