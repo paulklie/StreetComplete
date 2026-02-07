@@ -100,6 +100,7 @@ import de.westnordost.streetcomplete.databinding.EffectQuestPlopBinding
 import de.westnordost.streetcomplete.osm.POPULAR_PLACE_FEATURE_IDS
 import de.westnordost.streetcomplete.osm.Tags
 import de.westnordost.streetcomplete.osm.applyTo
+import de.westnordost.streetcomplete.osm.getDirection
 import de.westnordost.streetcomplete.osm.isPlace
 import de.westnordost.streetcomplete.osm.level.levelsIntersect
 import de.westnordost.streetcomplete.osm.level.parseLevelsOrNull
@@ -1326,7 +1327,8 @@ class MainActivity :
             val geometry = mapData?.getGeometry(e.type, e.id) ?: return@mapNotNull null
             val icon = getIcon(featureDictionary.value, e)
             val title = getTitle(e.tags, localLanguages)
-            Marker(geometry, icon, title)
+            val direction = (e as? Node)?.getDirection(mapDataWithEditsSource)
+            Marker(geometry, icon, title, direction = direction)
         }.toList()
     }
 
