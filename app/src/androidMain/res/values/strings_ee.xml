@@ -801,4 +801,8 @@ Out of the box SCEE is configured to behave very similar to StreetComplete.</str
     <string name="quest_material_adobe">Adobe</string>
     <string name="quest_material_pebbledash">Pebbledash</string>
 
+    <!-- fence material -->
+    <string name="quest_fence_material_title">What material is this fence made of?</string>
+    <string name="quest_material_wire">Wire</string>
+
 </resources>
