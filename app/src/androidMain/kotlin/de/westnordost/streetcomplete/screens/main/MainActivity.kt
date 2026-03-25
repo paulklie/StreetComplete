@@ -36,6 +36,8 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.compose.ui.geometry.Offset
@@ -141,6 +143,7 @@ import de.westnordost.streetcomplete.screens.main.map.maplibre.toPadding
 import de.westnordost.streetcomplete.ui.util.content
 import de.westnordost.streetcomplete.screens.settings.custom_geometry_changed
 import de.westnordost.streetcomplete.screens.settings.gpx_track_changed
+import de.westnordost.streetcomplete.ui.common.feature.FeatureSearchDialog
 import de.westnordost.streetcomplete.util.SoundFx
 import de.westnordost.streetcomplete.util.buildGeoUri
 import de.westnordost.streetcomplete.util.getSystemLocales
@@ -161,7 +164,6 @@ import de.westnordost.streetcomplete.util.logs.Log
 import de.westnordost.streetcomplete.util.math.area
 import de.westnordost.streetcomplete.util.math.enclosingBoundingBox
 import de.westnordost.streetcomplete.util.math.enlargedBy
-import de.westnordost.streetcomplete.view.dialogs.SearchFeaturesDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -249,6 +251,7 @@ class MainActivity :
         supportFragmentManager.findFragmentByTag(BOTTOM_SHEET)
 
     private var questMonitorJob: Job? = null
+    private var addPoiAt: MutableState<LatLon?> = mutableStateOf(null)
 
     /* +++++++++++++++++++++++++++++++++++++++ CALLBACKS ++++++++++++++++++++++++++++++++++++++++ */
 
@@ -333,6 +336,22 @@ class MainActivity :
                     onClickStopTrackRecording = ::onClickTracksStop,
                     onClickDownload = ::onClickDownload,
                     onExplainedNeedForLocationPermission = ::requestLocation
+                )
+            }
+            if (addPoiAt.value != null) {
+                val pos = addPoiAt.value ?: return@content
+                val country = countryBoundaries.value.getIds(pos.longitude, pos.latitude).firstOrNull()
+                val defaultFeatureIds: List<String> = prefs.getString(Prefs.CREATE_POI_RECENT_FEATURE_IDS, "")
+                    .split("§").filter { it.isNotBlank() && it != "shop" }
+                    .ifEmpty { POPULAR_PLACE_FEATURE_IDS }
+                FeatureSearchDialog(
+                    onDismissRequest = { addPoiAt.value = null },
+                    onSelectedFeature = { addPoi(pos, it) },
+                    featureDictionary = featureDictionary.value,
+                    geometryType = GeometryType.POINT,
+                    countryCode = country,
+                    filterFn = { true },
+                    codesOfDefaultFeatures = defaultFeatureIds.reversed()
                 )
             }
         }
@@ -1018,28 +1037,8 @@ class MainActivity :
         }
 
         val f = bottomSheetFragment
-        if (f is IsCloseableBottomSheet) f.onClickClose { selectPoiType(pos) }
-        else selectPoiType(pos)
-    }
-
-    private fun selectPoiType(pos: LatLon) {
-        val country = countryBoundaries.value.getIds(pos.longitude, pos.latitude).firstOrNull()
-        val defaultFeatureIds: List<String> = prefs.getString(Prefs.CREATE_POI_RECENT_FEATURE_IDS, "")
-            .split("§").filter { it.isNotBlank() && it != "shop" }
-            .ifEmpty { POPULAR_PLACE_FEATURE_IDS }
-
-        SearchFeaturesDialog(
-            this,
-            featureDictionary.value,
-            GeometryType.POINT,
-            country,
-            null, // pre-filled search text
-            { true }, // filter, but we want everything
-            { addPoi(pos, it) },
-            defaultFeatureIds.reversed(),
-            false,
-            pos,
-        ).show()
+        if (f is IsCloseableBottomSheet) f.onClickClose { addPoiAt.value = pos }
+        else addPoiAt.value = pos
     }
 
     private fun addPoi(pos: LatLon, feature: Feature) {
