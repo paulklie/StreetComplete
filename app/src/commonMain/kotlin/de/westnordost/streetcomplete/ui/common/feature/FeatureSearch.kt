@@ -219,7 +219,8 @@ private fun IconFeaturesColumn(
 }
 
 // todo (from old dialog)
-//  optional position for getLanguagesForFeatureDictionary
+//  optional position for local language
+//  but this requires countryInfos, which are currently Android only
 
 // todo: weird mix of pin icons, quest icons, temaki icons
 //  ideally all would be same style, especially avoid monochrome temaki icons
