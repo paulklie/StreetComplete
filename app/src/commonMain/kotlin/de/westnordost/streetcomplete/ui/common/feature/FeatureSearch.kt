@@ -1,16 +1,23 @@
 package de.westnordost.streetcomplete.ui.common.feature
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Divider
+import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
@@ -19,9 +26,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.unit.dp
@@ -35,6 +45,7 @@ import de.westnordost.streetcomplete.resources.quest_shop_gone_replaced_answer_h
 import de.westnordost.streetcomplete.ui.common.CenteredLargeTitleHint
 import de.westnordost.streetcomplete.ui.common.ClearIcon
 import de.westnordost.streetcomplete.ui.common.SearchIcon
+import de.westnordost.streetcomplete.ui.common.VerticalDivider
 import de.westnordost.streetcomplete.ui.ktx.fadingVerticalScrollEdges
 import de.westnordost.streetcomplete.util.locale.getLanguagesForFeatureDictionary
 import org.jetbrains.compose.resources.stringResource
@@ -105,7 +116,7 @@ fun FeatureSearch(
         Divider()
         if (features.isEmpty()) {
             CenteredLargeTitleHint(stringResource(Res.string.no_search_results))
-        } else {
+        } else if (search.isNotEmpty()) {
             FeaturesColumn(
                 features = features,
                 onClickFeature = onSelectedFeature,
@@ -114,6 +125,25 @@ fun FeatureSearch(
                 countryCode = countryCode,
                 searchText = search
             )
+        } else {
+            val (iconOnly, normal) = features.partition { it.id in iconOnlyFeatures }
+            Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                FeaturesColumn(
+                    features = normal,
+                    onClickFeature = onSelectedFeature,
+                    featureDictionary = featureDictionary,
+                    modifier = Modifier.fillMaxWidth(0.75f),
+                    countryCode = countryCode,
+                    searchText = search
+                )
+                if (iconOnly.isNotEmpty()) {
+                    VerticalDivider()
+                    IconFeaturesColumn(
+                        features = iconOnly,
+                        onClickFeature = onSelectedFeature,
+                    )
+                }
+            }
         }
     }
 }
@@ -151,9 +181,45 @@ private fun FeaturesColumn(
     }
 }
 
+@Composable
+private fun IconFeaturesColumn(
+    features: List<Feature>,
+    onClickFeature: (Feature) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val state = rememberLazyListState()
+    LazyColumn(
+        state = state,
+        modifier = modifier
+    ) {
+        items(features) { feature ->
+            Box(Modifier
+                .width(56.dp)
+                .clickable { onClickFeature(feature) }
+                .padding(horizontal = 4.dp, vertical = 8.dp)
+            ) {
+                val icon = iconOnlyFeatures[feature.id] ?: R.drawable.preset_maki_marker_stroked
+                val tint: Color = LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+                if (LocalResources.current.getResourceEntryName(icon).startsWith("preset_"))
+                    Icon(
+                        painter = androidx.compose.ui.res.painterResource(icon),
+                        contentDescription = null,
+                        modifier = modifier.align(Alignment.Center),
+                        tint = tint,
+                    )
+                else
+                    Image(
+                        painter = androidx.compose.ui.res.painterResource(icon),
+                        contentDescription = null,
+                        modifier = modifier.align(Alignment.Center),
+                    )
+            }
+        }
+    }
+}
+
 // todo (from old dialog)
 //  optional position for getLanguagesForFeatureDictionary
-//  iconOnlyFeatures: these features should be shown in a separate column if in default features (and not in normal search)
 
 // todo: weird mix of pin icons, quest icons, temaki icons
 //  ideally all would be same style, especially avoid monochrome temaki icons
