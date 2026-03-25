@@ -11,9 +11,6 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.PointF
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
-import android.graphics.drawable.LayerDrawable
 import android.location.Location
 import android.os.Bundle
 import android.os.IBinder
@@ -24,7 +21,6 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.OvershootInterpolator
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
@@ -38,7 +34,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.compose.ui.geometry.Offset
 import androidx.core.graphics.Insets
@@ -227,10 +222,7 @@ class MainActivity :
     private val soundFx: SoundFx by inject()
     private val levelFilter: LevelFilter by inject()
     private val countryBoundaries: Lazy<CountryBoundaries> by inject(named("CountryBoundariesLazy"))
-    private val questTypeRegistry: QuestTypeRegistry by inject()
-    private val overlayRegistry: OverlayRegistry by inject()
     private val osmQuestController: OsmQuestController by inject()
-    private val selectedOverlaySource: SelectedOverlayController by inject()
     private val customQuestList: CustomQuestList by inject()
 
     private lateinit var locationManager: FineLocationManager
@@ -335,7 +327,8 @@ class MainActivity :
                     onClickCreate = ::onClickCreateButton,
                     onClickStopTrackRecording = ::onClickTracksStop,
                     onClickDownload = ::onClickDownload,
-                    onExplainedNeedForLocationPermission = ::requestLocation
+                    onExplainedNeedForLocationPermission = ::requestLocation,
+                    showQuestDetails = { lifecycleScope.launch { showQuestDetails(it) } }
                 )
             }
             if (addPoiAt.value != null) {
@@ -627,7 +620,7 @@ class MainActivity :
         if (f.arguments == null) f.arguments = bundleOf()
         val args = TagEditor.createArguments(element, geometry, mapFragment?.cameraPosition?.rotation, mapFragment?.cameraPosition?.tilt, questKey, editTypeName)
         f.requireArguments().putAll(args)
-        binding.otherQuestsScrollView.visibility = View.GONE
+        viewModel.nearbyQuests.value = null
         supportFragmentManager.commit(true) {
             replace(R.id.map_bottom_sheet_container, f, BOTTOM_SHEET)
             addToBackStack(BOTTOM_SHEET)
@@ -1096,8 +1089,7 @@ class MainActivity :
         currentFocus?.hideKeyboard()
         if (bottomSheetFragment != null) {
             supportFragmentManager.popBackStack(BOTTOM_SHEET, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-            binding.otherQuestsLayout.removeAllViews()
-            binding.otherQuestsScrollView.visibility = View.GONE
+            viewModel.nearbyQuests.value = null
         }
         viewModel.showingBottomSheet.value = false
         clearHighlighting()
@@ -1361,35 +1353,7 @@ class MainActivity :
                 Pair(color, mutableListOf())
             }.second.add(it)
         }
-
-        val params = ViewGroup.LayoutParams(resources.dpToPx(54).toInt(), resources.dpToPx(54).toInt())
-        runOnUiThread {
-            questsAndColorByElement.values.forEach {
-                val color = it.first
-                it.second.forEach { q ->
-                    val questView = ImageView(this).apply {
-                        layoutParams = params
-                        scaleX = 0.95f
-                        scaleY = 0.95f
-                        setOnClickListener {
-                            binding.otherQuestsLayout.removeAllViews()
-                            lifecycleScope.launch { showQuestDetails(q) }
-                        }
-
-                        // create layerDrawable from quest icon and ring
-                        val ring = ContextCompat.getDrawable(context, R.drawable.pin_selection_ring)!! // thanks google for not providing documentation WHEN this can be null... is it instead of resourceNotFoundException?
-                        ring.colorFilter = if (color == Color.WHITE) null
-                            else PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
-                        val icon = ContextCompat.getDrawable(context, q.type.icon)!!
-                        icon.colorFilter = PorterDuffColorFilter(ColorUtils.blendARGB(color, Color.WHITE, 0.8f), PorterDuff.Mode.MULTIPLY)
-                        setImageDrawable(LayerDrawable(arrayOf(icon, ring)))
-                    }
-                    binding.otherQuestsLayout.addView(questView)
-                }
-            }
-            binding.otherQuestsScrollView.fullScroll(View.FOCUS_UP) // scroll up when the quest changes
-            binding.otherQuestsScrollView.visibility = View.VISIBLE
-        }
+        viewModel.nearbyQuests.value = questsAndColorByElement.values
         return markers
     }
 
