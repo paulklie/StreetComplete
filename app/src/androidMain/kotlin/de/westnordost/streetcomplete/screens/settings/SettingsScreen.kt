@@ -54,13 +54,13 @@ import de.westnordost.streetcomplete.ui.common.dialogs.InfoDialog
 import de.westnordost.streetcomplete.ui.common.settings.Preference
 import de.westnordost.streetcomplete.ui.common.settings.PreferenceCategory
 import de.westnordost.streetcomplete.util.TempLogger
-import de.westnordost.streetcomplete.util.dialogs.setDefaultDialogPadding
 import de.westnordost.streetcomplete.util.logs.DatabaseLogger
 import de.westnordost.streetcomplete.util.logs.Log
 import org.koin.compose.koinInject
 import de.westnordost.streetcomplete.ui.common.settings.Select
 import de.westnordost.streetcomplete.util.ktx.getDisplayName
 import de.westnordost.streetcomplete.util.locale.NumberFormatter
+import de.westnordost.streetcomplete.util.setDefaultDialogPadding
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource

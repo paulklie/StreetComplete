@@ -37,7 +37,7 @@ class AddAmenityCover(
         mapData.filter { isApplicableTo(it) }
 
     override fun isApplicableTo(element: Element) =
-        nodesFilter.matches(element) && getFeature(element) != null
+        filter.matches(element) && getFeature(element) != null
 
     override fun getHighlightedElements(element: Element, mapData: MapDataWithGeometry): Sequence<Element> {
         /* put markers for objects that are exactly the same as for which this quest is asking for

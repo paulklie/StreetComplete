@@ -42,8 +42,8 @@ class AddSidewalkSurface : OsmFilterQuestType<SidewalkSurfaceAnswer>(), AndroidQ
 
     override fun createForm() = AddSidewalkSurfaceForm()
 
-    override fun getHighlightedElements(element: Element, getMapData: () -> MapDataWithGeometry) =
-        getMapData().filter("""
+    override fun getHighlightedElements(element: Element, mapData: MapDataWithGeometry) =
+        mapData.filter("""
             ways with (
                 highway ~ cycleway|path
                 or highway ~ footway|bridleway and bicycle ~ yes|designated

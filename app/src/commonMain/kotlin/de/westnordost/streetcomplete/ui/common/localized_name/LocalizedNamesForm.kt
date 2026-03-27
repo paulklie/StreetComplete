@@ -39,7 +39,6 @@ import de.westnordost.streetcomplete.ui.common.DropdownButton
 import de.westnordost.streetcomplete.util.ktx.displayName
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import de.westnordost.streetcomplete.Prefs
 
 /** Edit a list of [localizedNames] of at most [languageTags] different languages.*/

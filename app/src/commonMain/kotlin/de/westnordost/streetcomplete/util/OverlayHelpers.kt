@@ -3,6 +3,7 @@ package de.westnordost.streetcomplete.util
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Resources
 import android.util.TypedValue
 import android.view.ViewGroup
@@ -18,6 +19,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.widget.doAfterTextChanged
+import com.russhwolf.settings.ObservableSettings
 import de.westnordost.streetcomplete.Prefs
 import de.westnordost.streetcomplete.R
 import de.westnordost.streetcomplete.data.elementfilter.toElementFilterExpression
@@ -27,11 +29,7 @@ import de.westnordost.streetcomplete.data.preferences.Preferences
 import de.westnordost.streetcomplete.data.quest.QuestTypeRegistry
 import de.westnordost.streetcomplete.data.overlays.Overlay
 import de.westnordost.streetcomplete.data.overlays.OverlayStyle
-import de.westnordost.streetcomplete.overlays.custom.getCustomOverlayIndices
-import de.westnordost.streetcomplete.overlays.custom.getIndexedCustomOverlayPref
-import de.westnordost.streetcomplete.util.dialogs.setViewWithDefaultPadding
 import de.westnordost.streetcomplete.util.ktx.dpToPx
-import de.westnordost.streetcomplete.view.ArrayImageAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -284,6 +282,13 @@ fun getFakeCustomOverlays(prefs: Preferences, res: Resources, onlyIfExpertMode: 
         }
     }
 }
+
+fun getIndexedCustomOverlayPref(pref: String, index: Int) = pref.replace("idx", index.toString())
+fun getCurrentCustomOverlayPref(pref: String, prefs: ObservableSettings) = getIndexedCustomOverlayPref(pref, prefs.getInt(Prefs.CUSTOM_OVERLAY_SELECTED_INDEX, 0))
+fun getCustomOverlayIndices(prefs: SharedPreferences) = prefs.getString(Prefs.CUSTOM_OVERLAY_INDICES, "0")!!
+    .split(",").mapNotNull { it.toIntOrNull() }
+fun getCustomOverlayIndices(prefs: Preferences) = prefs.getString(Prefs.CUSTOM_OVERLAY_INDICES, "0")
+    .split(",").mapNotNull { it.toIntOrNull() }
 
 @OptIn(InternalResourceApi::class)
 val fakeStringResource = StringResource("", "", emptySet())

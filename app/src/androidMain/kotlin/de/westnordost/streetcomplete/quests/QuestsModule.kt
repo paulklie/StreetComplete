@@ -272,7 +272,6 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val questsModule = module {
-//    factory { NameSuggestionsSource(get()) }
     single { CustomQuestList(androidContext()) }
     single { OsmoseDao(get(), get()) }
 
@@ -301,6 +300,7 @@ fun questTypeRegistry(
 ) = QuestTypeRegistry({ getQuestTypeList(
     arSupportChecker,
     getCountryInfoByLocation,
+    getCountryOrSubdivisionCode,
     getFeature,
     osmoseDao,
     customQuestList,
@@ -309,6 +309,7 @@ fun questTypeRegistry(
 fun getQuestTypeList(
     arSupportChecker: ArSupportChecker,
     getCountryInfoByLocation: (location: LatLon) -> CountryInfo,
+    getCountryOrSubdivisionCode: (LatLon) -> String?,
     getFeature: (Element) -> Feature?,
     osmoseDao: OsmoseDao,
     customQuestList: CustomQuestList,

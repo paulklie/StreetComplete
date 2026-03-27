@@ -28,7 +28,9 @@ import de.westnordost.streetcomplete.ui.common.item_select.ImageWithDescription
 import de.westnordost.streetcomplete.ui.common.item_select.ImageWithLabel
 import de.westnordost.streetcomplete.ui.util.content
 import de.westnordost.streetcomplete.util.ktx.couldBeSteps
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.serializer
+import org.jetbrains.compose.resources.getSystemResourceEnvironment
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -70,10 +72,12 @@ class AddSmoothnessForm : AItemSelectQuestForm<Smoothness, SmoothnessAnswer>() {
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        surfaceTag?.let { setTitle(resources.getString((questType as OsmElementQuestType<*>).getTitle(element.tags)) + " ($it)") }
-    }
+    override fun getTitleString() = surfaceTag?.let { runBlocking {
+        org.jetbrains.compose.resources.getString(
+            getSystemResourceEnvironment(),
+            (questType as OsmElementQuestType<*>).getTitle(element.tags) ?: questType.title
+        ) + " ($it)"
+    } }
 
     override fun onClickOk(selectedItem: Smoothness) {
         applyAnswer(SmoothnessValueAnswer(selectedItem))

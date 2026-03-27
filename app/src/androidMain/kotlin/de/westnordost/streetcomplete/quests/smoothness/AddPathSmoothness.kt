@@ -41,9 +41,9 @@ class AddPathSmoothness : OsmFilterQuestType<SmoothnessAnswer>(), AndroidQuest {
 
     override fun createForm() = AddSmoothnessForm()
 
-    override fun getHighlightedElements(element: Element, getMapData: () -> MapDataWithGeometry): Sequence<Element> {
+    override fun getHighlightedElements(element: Element, mapData: MapDataWithGeometry): Sequence<Element> {
         val nodes = (element as Way).nodeIds
-        return getMapData().nodes.asSequence().filter { it.id in nodes && barrierFilter.matches(it) }
+        return mapData.nodes.asSequence().filter { it.id in nodes && barrierFilter.matches(it) }
     }
 
     private val barrierFilter by lazy {

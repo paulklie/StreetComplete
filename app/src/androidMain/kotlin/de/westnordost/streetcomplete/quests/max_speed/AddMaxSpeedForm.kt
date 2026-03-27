@@ -4,9 +4,6 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.core.view.children
-import androidx.core.view.isGone
-import androidx.core.widget.doAfterTextChanged
 import de.westnordost.streetcomplete.Prefs
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,23 +20,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.westnordost.streetcomplete.quests.max_speed.MaxSpeedSign.Type.*
 import de.westnordost.streetcomplete.R
+import de.westnordost.streetcomplete.data.meta.SpeedMeasurementUnit
 import de.westnordost.streetcomplete.databinding.ComposeViewBinding
 import de.westnordost.streetcomplete.osm.maxspeed.ROADS_WHERE_SLOW_ZONE_IS_LIKELY
 import de.westnordost.streetcomplete.osm.maxspeed.Speed
 import de.westnordost.streetcomplete.quests.AbstractOsmQuestForm
 import de.westnordost.streetcomplete.quests.AnswerItem
-import de.westnordost.streetcomplete.quests.max_speed.SpeedType.ADVISORY
-import de.westnordost.streetcomplete.quests.max_speed.SpeedType.LIVING_STREET
-import de.westnordost.streetcomplete.quests.max_speed.SpeedType.NO_SIGN
-import de.westnordost.streetcomplete.quests.max_speed.SpeedType.NSL
-import de.westnordost.streetcomplete.quests.max_speed.SpeedType.SIGN
-import de.westnordost.streetcomplete.quests.max_speed.SpeedType.ZONE
-import de.westnordost.streetcomplete.util.ktx.advisorySpeedLimitSignLayoutResId
-import de.westnordost.streetcomplete.util.ktx.intOrNull
-import de.westnordost.streetcomplete.util.ktx.livingStreetSignDrawableResId
-import de.westnordost.streetcomplete.util.ktx.showKeyboard
 import de.westnordost.streetcomplete.util.dialogs.showAddConditionalDialog
-import kotlin.text.split
 import de.westnordost.streetcomplete.resources.*
 import de.westnordost.streetcomplete.ui.theme.extraLargeInput
 import de.westnordost.streetcomplete.ui.util.content
@@ -59,7 +46,7 @@ class AddMaxSpeedForm : AbstractOsmQuestForm<Pair<MaxSpeedAnswer, Pair<String, S
             })
         }
         if (prefs.getBoolean(Prefs.EXPERT_MODE, false))
-            result.add(AnswerItem(R.string.quest_maxspeed_conditional) { addConditional() })
+            add(AnswerItem(R.string.quest_maxspeed_conditional) { addConditional() })
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -88,57 +75,17 @@ class AddMaxSpeedForm : AbstractOsmQuestForm<Pair<MaxSpeedAnswer, Pair<String, S
                 .show()
             return
         }
-        // then copy whatever answering is doing:
-
-        // if nsl: ask dual carriageway
-        if (speedType == NSL) {
-            askIsDualCarriageway(
-                onYes = { showConditionalDialog("nsl_dual") },
-                onNo = { showConditionalDialog("nsl_single") }
-            )
-            return
-        }
-        // if no sign: ask urban/rural
-        if (speedType == NO_SIGN) {
-            val highwayTag = element.tags["highway"]!!
-            if (ROADS_WITH_DEFINITE_SPEED_LIMIT.contains(highwayTag)) {
-                showConditionalDialog(highwayTag)
-            } else if (countryInfo.countryCode == "GB") {
-                askIsDualCarriageway(
-                    onYes = { showConditionalDialog("nsl_dual") },
-                    onNo = {
-                        determineLit(
-                            onYes = { showConditionalDialog("nsl_restricted", true) },
-                            onNo = { showConditionalDialog("nsl_single", false) }
-                        )
-                    }
-                )
-            } else {
-                askUrbanOrRural(
-                    onUrban = { showConditionalDialog("urban") },
-                    onRural = { showConditionalDialog("rural") }
-                )
-            }
-            return
-        }
         showConditionalDialog()
     }
 
-    private fun showConditionalDialog(noSignAnswer: String? = null, lit: Boolean? = null) {
+    private fun showConditionalDialog() {
         showAddConditionalDialog(requireContext(), listOf("maxspeed", "maxspeed:hgv", "maxspeed:psv", "maxspeed:bus"), null, InputType.TYPE_CLASS_NUMBER) { k, v ->
             val speedText = v.substringBefore("@").trim()
             val speedNumber = speedText.toIntOrNull() ?: return@showAddConditionalDialog
-            val speed = when (speedUnitSelect?.selectedItem as SpeedMeasurementUnit? ?: speedUnits.first()) {
-                KILOMETERS_PER_HOUR -> Speed.Kmh(speedNumber)
-                MILES_PER_HOUR -> Speed.Mph(speedNumber)
-            }
-            val value = v.replaceFirst(speedText, speed.toString())
-            when (speedType) {
-                NO_SIGN -> applyNoSignAnswer(noSignAnswer!!, null, k to value)
-                NSL -> applyNoSignAnswer(noSignAnswer!!, lit, k to value)
-                LIVING_STREET -> applyAnswer(IsLivingStreet to (k to value))
-                else -> applySpeedLimitFormAnswer(k to value)
-            }
+            val unit = (maxSpeedAnswer.value as? MaxSpeedSign)?.speed?.unit ?: return@showAddConditionalDialog
+            val speed = Speed(speedNumber, unit)
+            val value = v.replaceFirst(speedText, speed.toOsmString())
+            applySpeedLimitFormAnswer(k to value)
         }
         return
     }

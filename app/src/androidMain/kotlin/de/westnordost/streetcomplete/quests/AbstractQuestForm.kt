@@ -132,6 +132,7 @@ abstract class AbstractQuestForm :
         return binding.root
     }
 
+    protected open fun getTitleString(): String? = null
     protected open fun getTitle(): StringResource =
         questType.title
 
@@ -148,7 +149,7 @@ abstract class AbstractQuestForm :
 
         binding.questHeader.content { Surface {
             QuestHeader(
-                title = stringResource(getTitle()),
+                title = getTitleString() ?: stringResource(getTitle()),
                 subtitle = getSubtitle(),
                 hintText = getHint(),
                 hintImages = getHintImages()
@@ -187,8 +188,6 @@ abstract class AbstractQuestForm :
         super.onDestroyView()
         _binding = null
     }
-
-    protected fun getCurrentTitle(): CharSequence = binding.titleLabel.text
 
     protected fun setObjNote(text: CharSequence?, fixmeText: CharSequence?) {
         binding.noteLabel.text = text

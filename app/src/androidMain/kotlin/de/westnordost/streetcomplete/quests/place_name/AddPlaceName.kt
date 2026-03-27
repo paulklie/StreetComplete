@@ -50,8 +50,6 @@ class AddPlaceName(
     override val isReplacePlaceEnabled = true
     override val achievements = listOf(CITIZEN)
 
-    override fun getTitle(tags: Map<String, String>) = R.string.quest_placeName_title
-
     override fun getApplicableElements(mapData: MapDataWithGeometry): Iterable<Element> =
         mapData.filter { isApplicableTo(it) }
 

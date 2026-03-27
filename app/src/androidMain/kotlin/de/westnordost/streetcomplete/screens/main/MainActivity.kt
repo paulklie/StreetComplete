@@ -1244,7 +1244,7 @@ class MainActivity :
             e
         } ?: return
             else null
-        val highlightedElementMarkers = lifecycleScope.async(Dispatchers.IO) { getHighlightedElements(quest, element) }
+        val highlightedElementMarkers = lifecycleScope.async(Dispatchers.IO) { showHighlightedElements(quest, element) }
         val otherQuestMarkers = lifecycleScope.async(Dispatchers.IO) { showOtherQuests(quest) }
         if (quest is OsmQuest) {
             val osmArgs = AbstractOsmQuestForm.createArguments(element!!)
@@ -1290,7 +1290,7 @@ class MainActivity :
         var mapData: MapDataWithGeometry? = null
 
         fun getMapData(): MapDataWithGeometry {
-            val data = LazyMapDataWithGeometry(bbox, mapDataWithEditsSource)
+            val data = mapDataWithEditsSource.getMapDataWithGeometry(bbox)
             if (data is MutableMapDataWithGeometry && element is Way && !data.isWayComplete(element.id)) {
                 // complete way to show stuff along it
                 mapDataWithEditsSource.getWayComplete(element.id)?.nodes?.forEach {
@@ -1303,7 +1303,7 @@ class MainActivity :
 
         val elements =
             when (quest) {
-                is OsmQuest -> element?.let { quest.type.getHighlightedElements(it, ::getMapData) } ?: emptySequence()
+                is OsmQuest -> element?.let { quest.type.getHighlightedElements(it, mapData ?: getMapData()) } ?: emptySequence()
                 is ExternalSourceQuest -> quest.type.getHighlightedElements(::getMapData)
                 else -> emptySequence()
             }

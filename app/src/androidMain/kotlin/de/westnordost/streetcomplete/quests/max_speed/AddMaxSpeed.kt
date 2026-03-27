@@ -17,7 +17,7 @@ import de.westnordost.streetcomplete.util.ktx.toYesNo
 
 class AddMaxSpeed (
     private val getCountryOrSubdivisionCode: (LatLon) -> String?
-) : OsmFilterQuestTypePair<MaxSpeedAnswer, Pair<String, String>?>(), AndroidQuest {
+) : OsmFilterQuestType<Pair<MaxSpeedAnswer, Pair<String, String>?>>(), AndroidQuest {
 
     override val elementFilter = """
         ways with
