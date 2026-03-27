@@ -65,6 +65,7 @@ import de.westnordost.streetcomplete.data.osm.mapdata.Element
 import de.westnordost.streetcomplete.data.osm.mapdata.ElementKey
 import de.westnordost.streetcomplete.data.osm.mapdata.ElementType
 import de.westnordost.streetcomplete.data.osm.mapdata.LatLon
+import de.westnordost.streetcomplete.data.osm.mapdata.LazyMapDataWithGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.MapDataWithGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.MutableMapDataWithGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.Node
@@ -1280,7 +1281,7 @@ class MainActivity :
         return m.values.toList()
     }
 
-    private fun getHighlightedElements(quest: Quest, element: Element? = null): List<Marker> {
+    private fun showHighlightedElements(quest: Quest, element: Element? = null): List<Marker> {
         val bbox = when (quest) {
             is OsmQuest -> quest.geometry.bounds.enlargedBy(quest.type.highlightedElementsRadius)
             is ExternalSourceQuest -> quest.geometry.bounds.enlargedBy(quest.type.highlightedElementsRadius)
@@ -1289,7 +1290,7 @@ class MainActivity :
         var mapData: MapDataWithGeometry? = null
 
         fun getMapData(): MapDataWithGeometry {
-            val data = mapDataWithEditsSource.getMapDataWithGeometry(bbox)
+            val data = LazyMapDataWithGeometry(bbox, mapDataWithEditsSource)
             if (data is MutableMapDataWithGeometry && element is Way && !data.isWayComplete(element.id)) {
                 // complete way to show stuff along it
                 mapDataWithEditsSource.getWayComplete(element.id)?.nodes?.forEach {

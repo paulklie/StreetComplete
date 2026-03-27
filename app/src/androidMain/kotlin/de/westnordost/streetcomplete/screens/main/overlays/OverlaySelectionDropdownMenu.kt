@@ -24,6 +24,7 @@ import de.westnordost.streetcomplete.overlays.custom.CustomOverlay
 import de.westnordost.streetcomplete.overlays.custom.getCustomOverlayIndices
 import de.westnordost.streetcomplete.resources.Res
 import de.westnordost.streetcomplete.resources.overlay_none
+import de.westnordost.streetcomplete.resources.*
 import de.westnordost.streetcomplete.ui.common.DropdownMenuItem
 import de.westnordost.streetcomplete.util.showOverlayCustomizer
 import org.koin.compose.koinInject
