@@ -46,6 +46,8 @@ plugins {
 repositories {
     google()
     mavenCentral()
+    // for com.github.ticofab:android-gpx-parser
+    maven { url = uri("https://www.jitpack.io") }
 }
 
 buildkonfig {
