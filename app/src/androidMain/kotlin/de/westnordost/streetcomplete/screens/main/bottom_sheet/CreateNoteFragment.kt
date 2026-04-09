@@ -1,5 +1,6 @@
 package de.westnordost.streetcomplete.screens.main.bottom_sheet
 
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager.FEATURE_CAMERA_ANY
 import android.content.res.Configuration
 import android.graphics.PointF
@@ -96,6 +97,7 @@ class CreateNoteFragment : AbstractCreateNoteFragment() {
         return binding.root
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -132,13 +134,14 @@ class CreateNoteFragment : AbstractCreateNoteFragment() {
                 onTakePhoto = { takePhoto() },
                 fileSystem = fileSystem,
                 imagePaths = noteImagePaths.value,
+                isShowingGpxButton = prefs.getBoolean(Prefs.GPX_BUTTON, false),
             )
         } }
-        /*        if (prefs.getBoolean(Prefs.GPX_BUTTON, false)) {
+        if (prefs.getBoolean(Prefs.GPX_BUTTON, false)) {
             bottomSheetBinding.okButton.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,0,0) // removes check drawable
             gpxButton.text = "GPX"
             okButton.text = "OSM"
-        }*/
+        }
     }
 
     override fun onDestroyView() {

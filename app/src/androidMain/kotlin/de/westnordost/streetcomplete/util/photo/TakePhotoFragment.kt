@@ -5,13 +5,17 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import de.westnordost.streetcomplete.Prefs
 import de.westnordost.streetcomplete.R
+import de.westnordost.streetcomplete.data.preferences.Preferences
 import de.westnordost.streetcomplete.util.ktx.toast
 import de.westnordost.streetcomplete.util.logs.Log
+import org.koin.android.ext.android.inject
 import java.io.File
 
 class TakePhotoFragment : Fragment() {
 
+    val prefs: Preferences by inject()
     interface Listener {
         fun onTookPhoto(path: String)
     }
@@ -58,6 +62,12 @@ class TakePhotoFragment : Fragment() {
             return
         }
         if (file != null) {
+            val dir = activity?.getExternalFilesDir(null)
+            if (prefs.getBoolean(Prefs.SAVE_PHOTOS, false) && dir != null) {
+                val target = File(dir.absolutePath + File.separator + "full_photos", file.name)
+                target.parentFile?.mkdirs()
+                file.copyTo(target)
+            }
             rescalePhoto(file)
             listener?.onTookPhoto(file.path)
         }

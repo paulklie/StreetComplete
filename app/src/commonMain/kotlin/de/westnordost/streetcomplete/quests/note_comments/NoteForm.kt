@@ -1,5 +1,6 @@
 package de.westnordost.streetcomplete.quests.note_comments
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -39,6 +40,7 @@ fun NoteForm(
     imagePaths: List<String>,
     modifier: Modifier = Modifier,
     isGpxAttached: Boolean = false,
+    isShowingGpxButton: Boolean = false,
     showClose: Boolean = false,
     close: Boolean = false,
     onCloseCheck: (Boolean) -> Unit = {},
@@ -61,7 +63,10 @@ fun NoteForm(
             modifier = Modifier.fillMaxWidth()
         )
         if (showClose) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.clickable { onCloseCheck(!close) },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Checkbox(close, onCloseCheck)
                 Text(stringResource(Res.string.close_note_checkbox))
             }
@@ -79,7 +84,10 @@ fun NoteForm(
                 onDeleteImage = onDeleteImage,
                 onTakePhoto = onTakePhoto,
                 // because otherwise it would overlap with the OK button
-                modifier = Modifier.padding(end = 72.dp)
+                modifier = Modifier.padding(
+                    end = 72.dp,
+                    start = if (isShowingGpxButton) 40.dp else 0.dp
+                ),
             )
         }
     }

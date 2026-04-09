@@ -125,7 +125,10 @@ class NoteDiscussionForm : AbstractQuestForm(), TakePhotoFragment.Listener {
                 imagePaths = noteImagePaths.value,
                 showClose = prefs.expertMode,
                 close = closeNote.value,
-                onCloseCheck = { closeNote.value = it }
+                onCloseCheck = {
+                    closeNote.value = it
+                    checkIsFormComplete()
+                }
             )
         } }
     }
@@ -222,7 +225,7 @@ class NoteDiscussionForm : AbstractQuestForm(), TakePhotoFragment.Listener {
     override fun isRejectingClose(): Boolean =
         noteText.value.isNotBlank() || noteImagePaths.value.isNotEmpty()
 
-    override fun isFormComplete(): Boolean = noteText.value.isNotBlank()
+    override fun isFormComplete(): Boolean = noteText.value.isNotBlank() || closeNote.value
 
     companion object {
         private const val TAG_TAKE_PHOTO = "TakePhotoFragment"

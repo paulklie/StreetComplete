@@ -123,6 +123,7 @@ class LeaveNoteInsteadFragment : AbstractCreateNoteFragment() {
                 onTakePhoto = { takePhoto() },
                 fileSystem = fileSystem,
                 imagePaths = noteImagePaths.value,
+                isShowingGpxButton = prefs.getBoolean(Prefs.GPX_BUTTON, false),
             )
         } }
         if (prefs.getBoolean(Prefs.GPX_BUTTON, false)) {
