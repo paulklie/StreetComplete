@@ -8,7 +8,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.os.LocaleList
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.getSystemService
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
@@ -181,7 +180,7 @@ class StreetCompleteApplication : Application() {
 
         crashReportExceptionHandler.install()
 
-        feedsUpdater.updateDaily()
+        feedsUpdater.updateNow()
 
         enqueuePeriodicCleanupWork()
 
