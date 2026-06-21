@@ -157,6 +157,7 @@ import de.westnordost.streetcomplete.quests.oneway.AddOnewayBicycle
 import de.westnordost.streetcomplete.quests.opening_hours.AddOpeningHours
 import de.westnordost.streetcomplete.quests.opening_hours_signed.CheckOpeningHoursSigned
 import de.westnordost.streetcomplete.quests.orchard_produce.AddOrchardProduce
+import de.westnordost.streetcomplete.quests.orchard_type.AddOrchardType
 import de.westnordost.streetcomplete.quests.osmose.OsmoseDao
 import de.westnordost.streetcomplete.quests.osmose.OsmoseQuest
 import de.westnordost.streetcomplete.quests.parcel_locker_brand.AddParcelLockerBrand
@@ -714,6 +715,7 @@ fun getQuestTypeList(
     EE_QUEST_OFFSET + 58 to AddOnewayBicycle(),
     EE_QUEST_OFFSET + 62 to AddToiletsDisposal(),
     EE_QUEST_OFFSET + 63 to AddEvseId(),
+    EE_QUEST_OFFSET + 64 to AddOrchardType(), // need to look around the orchard to tell apart meadow orchard and plantation
     EE_QUEST_OFFSET + 10 to OsmoseQuest(osmoseDao),
     EE_QUEST_OFFSET + 11 to CustomQuest(customQuestList),
     // POI quests
