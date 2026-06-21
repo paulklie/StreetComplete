@@ -9,7 +9,7 @@ import de.westnordost.streetcomplete.data.osm.mapdata.MapDataWithGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.filter
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmElementQuestType
 import de.westnordost.streetcomplete.data.quest.AndroidQuest
-import de.westnordost.streetcomplete.data.user.achievements.EditTypeAchievement.POSTMAN
+import de.westnordost.streetcomplete.data.user.achievements.EditTypeAchievement.CITIZEN
 import de.westnordost.streetcomplete.osm.Tags
 import de.westnordost.streetcomplete.osm.opening_hours.isSupported
 import de.westnordost.streetcomplete.osm.opening_hours.toOpeningHours
@@ -38,9 +38,8 @@ class AddServiceTimes : OsmElementQuestType<CollectionTimesAnswer>, AndroidQuest
     override val wikiLink = "Key:collection_times"
     override val icon = R.drawable.religion_service_times
     override val title = Res.string.quest_service_times_title
-    override val isDeleteElementEnabled = true
-    override val achievements = listOf(POSTMAN)
-    //override val defaultDisabledMessage = Res.string.default_disabled_msg_ee
+    override val achievements = listOf(CITIZEN)
+    override val defaultDisabledMessage = Res.string.default_disabled_msg_ee
 
     override fun getTitle(tags: Map<String, String>): StringResource {
         /* treat invalid service times like it is not set at all. Any service are
