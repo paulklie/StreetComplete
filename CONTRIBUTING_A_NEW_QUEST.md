@@ -8,6 +8,10 @@ Contributions like that are highly welcomed and you would make mapping one more 
 
 Reading the text below is not necessary to create a new quest. Duplicating an existing quest and modifying its code may be sufficient - people were creating new quests before this documentation existed. This material simply helps you get a better understanding of it.
 
+# SCEE only
+
+Quests added for SCEE should be disabled by default and added at the bottom of `QuestsModule.kt`.
+
 # Dependencies - initial setup
 
 - install necessary software ([Android Studio](https://developer.android.com/studio) and [git](https://git-scm.com/downloads))
