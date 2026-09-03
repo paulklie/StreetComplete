@@ -434,6 +434,7 @@
     <string name="user_statistics_filter_by_country">by country</string>
     <string name="user_statistics_filter_by_quest_type">by type</string>
 
+    <string name="unknown_quest">Removed quests</string>
 
     <!-- Links screen -->
 

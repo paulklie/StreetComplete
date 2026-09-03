@@ -7,6 +7,7 @@ import de.westnordost.streetcomplete.data.AllEditTypes
 import de.westnordost.streetcomplete.data.flags.FlagAlignments
 import de.westnordost.streetcomplete.data.flags.readFlagAlignments
 import de.westnordost.streetcomplete.data.osm.edits.EditType
+import de.westnordost.streetcomplete.data.osm.edits.UnknownEditType
 import de.westnordost.streetcomplete.data.user.statistics.CountryStatistics
 import de.westnordost.streetcomplete.data.user.statistics.StatisticsSource
 import de.westnordost.streetcomplete.resources.Res
@@ -88,7 +89,9 @@ class EditStatisticsViewModelImpl(
             launch(Dispatchers.IO) {
                 editTypeStatistics.value = statisticsSource
                     .getEditTypeStatistics()
-                    .mapNotNull { createCompleteEditTypeStatistics(it.type, it.count) }
+                    .map { createCompleteEditTypeStatistics(it.type, it.count) }
+                    .groupBy { it.type }
+                    .map { (type, stats) -> EditTypeStatistics(type, stats.sumOf { it.count }) }
                     .sortedByDescending { it.count }
             }
         }
@@ -96,14 +99,16 @@ class EditStatisticsViewModelImpl(
             launch(Dispatchers.IO) {
                 editTypeStatisticsCurrentWeek.value = statisticsSource
                     .getCurrentWeekEditTypeStatistics()
-                    .mapNotNull { createCompleteEditTypeStatistics(it.type, it.count) }
+                    .map { createCompleteEditTypeStatistics(it.type, it.count) }
+                    .groupBy { it.type }
+                    .map { (type, stats) -> EditTypeStatistics(type, stats.sumOf { it.count }) }
                     .sortedByDescending { it.count }
             }
         }
     }
 
-    private fun createCompleteEditTypeStatistics(typeName: String, count: Int): EditTypeStatistics? {
-        val editType = allEditTypes.getByName(typeName) ?: return null
+    private fun createCompleteEditTypeStatistics(typeName: String?, count: Int): EditTypeStatistics {
+        val editType = typeName?.let { allEditTypes.getByName(it) } ?: UnknownEditType()
         return EditTypeStatistics(editType, count)
     }
 }
