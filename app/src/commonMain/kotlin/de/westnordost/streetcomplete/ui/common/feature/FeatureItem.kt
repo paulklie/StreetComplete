@@ -3,6 +3,8 @@ package de.westnordost.streetcomplete.ui.common.feature
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.Button
+import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
@@ -10,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -22,6 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import de.westnordost.osmfeatures.Feature
 import de.westnordost.osmfeatures.FeatureDictionary
+import de.westnordost.streetcomplete.osm.getWikiUrl
 import de.westnordost.streetcomplete.resources.*
 import de.westnordost.streetcomplete.ui.common.feature.buildAnnotatedName
 import de.westnordost.streetcomplete.util.locale.getLanguagesForFeatureDictionary
@@ -66,6 +70,9 @@ fun FeatureItem(
         annotatedName
     }
 
+    val url = feature.getWikiUrl(listOf("en"))
+    val uriHandler = LocalUriHandler.current
+
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -78,8 +85,15 @@ fun FeatureItem(
         )
         Text(
             text = annotatedText,
-            style = LocalTextStyle.current.copy(hyphens = Hyphens.Auto)
+            style = LocalTextStyle.current.copy(hyphens = Hyphens.Auto),
+            modifier = Modifier.weight(1f)
         )
+
+        if (url != null) {
+            Button(onClick = { uriHandler.openUri(url) }) {
+                Text(text = "Wiki")
+            }
+        }
     }
 }
 

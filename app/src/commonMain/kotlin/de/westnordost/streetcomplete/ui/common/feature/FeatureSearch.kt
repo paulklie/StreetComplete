@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -53,7 +54,7 @@ fun FeatureSearch(
         focusRequester.requestFocus()
     }
 
-    var search by remember { mutableStateOf("") }
+    var search by rememberSaveable { mutableStateOf("") }
     val languages = remember { getLanguagesForFeatureDictionary() }
     val defaultFeatures = remember(codesOfDefaultFeatures, featureDictionary, languages, countryCode) {
         codesOfDefaultFeatures.mapNotNull { id ->
