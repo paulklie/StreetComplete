@@ -3,11 +3,10 @@ package de.westnordost.streetcomplete.ui.common.feature
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Button
-import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import de.westnordost.osmfeatures.Feature
 import de.westnordost.osmfeatures.FeatureDictionary
 import de.westnordost.streetcomplete.osm.getWikiUrl
-import de.westnordost.streetcomplete.resources.*
-import de.westnordost.streetcomplete.ui.common.feature.buildAnnotatedName
+import de.westnordost.streetcomplete.ui.common.OpenInBrowserIcon
+import de.westnordost.streetcomplete.ui.ktx.tryOpenUri
 import de.westnordost.streetcomplete.util.locale.getLanguagesForFeatureDictionary
 
 /** Displays an OSM [feature] in the region specified by the given [countryCode].
@@ -90,8 +89,10 @@ fun FeatureItem(
         )
 
         if (url != null) {
-            Button(onClick = { uriHandler.openUri(url) }) {
-                Text(text = "Wiki")
+            TextButton(
+                onClick = { uriHandler.tryOpenUri(url) }
+            ) {
+                OpenInBrowserIcon()
             }
         }
     }
