@@ -6,14 +6,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,11 +32,33 @@ import org.jetbrains.compose.resources.stringResource
 
 /** Display a single link category from the link collection */
 @Composable
-fun LinkCategoryRow(category: LinkCategory, modifier: Modifier = Modifier) {
-    Column(modifier) {
-        Spacer(Modifier.padding(top = 8.dp))
-        Text(stringResource(category.title), style = MaterialTheme.typography.titleLarge)
-        Text(stringResource(category.description), style = MaterialTheme.typography.body1)
+fun LinkCategoryRow(
+    category: LinkCategory,
+    modifier: Modifier = Modifier,
+    expanded: Boolean = true,
+    onClick: (() -> Unit)? = null,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(category.title), style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(category.description), style = MaterialTheme.typography.body1)
+        }
+        if (onClick != null) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_arrow_drop_down_24),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .rotate(if (expanded) 0f else 270f)
+            )
+        }
     }
 }
 
@@ -81,7 +106,7 @@ fun LinkRow(link: Link, modifier: Modifier = Modifier) {
 @Preview
 @Composable
 private fun LinkCategoryRowPreview() {
-    LinkCategoryRow(LinkCategory.GOODIES)
+    LinkCategoryRow(LinkCategory.GOODIES, expanded = true, onClick = {})
 }
 
 @Preview
