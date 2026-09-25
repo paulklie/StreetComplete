@@ -37,6 +37,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import kotlin.time.Duration.Companion.milliseconds
+import de.westnordost.streetcomplete.osm.updateCheckDate
 
 @Composable fun ThingsOverlayForm(
     on: (OverlayAction) -> Unit,
@@ -90,6 +91,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
                 val tags = HashMap<String, String>()
                 val builder = StringMapChangesBuilder(tags)
+                builder.updateCheckDate()
                 feature.applyTo(builder)
                 builder.create().applyTo(tags)
                 on(Edit(CreateNodeAction(geometry.center, tags)))
