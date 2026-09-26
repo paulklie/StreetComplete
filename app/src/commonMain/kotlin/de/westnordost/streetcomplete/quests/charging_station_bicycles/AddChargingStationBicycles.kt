@@ -23,7 +23,7 @@ class AddChargingStationBicycles : OsmFilterQuestType<Boolean>() {
           and !bicycle
           and access !~ private|no
           and (
-             socket:ropd > 0
+             socket:ropd = yes or socket:ropd > 0
              or socket:bosch_3pin = yes or socket:bosch_3pin > 0
              or socket:shimano_steps_5pin = yes or socket:shimano_steps_5pin > 0
              or socket:xlr_3pin_cable = yes or socket:xlr_3pin_cable > 0
