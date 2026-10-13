@@ -19,10 +19,14 @@ import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.Hyphens
@@ -30,10 +34,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.westnordost.streetcomplete.resources.*
+import de.westnordost.streetcomplete.ui.common.StepperButton
 import de.westnordost.streetcomplete.ui.common.TextField2
 import de.westnordost.streetcomplete.ui.common.last_picked.LastPickedChipsRow
+import de.westnordost.streetcomplete.ui.ktx.pxToDp
 import de.westnordost.streetcomplete.ui.theme.largeInput
 import org.jetbrains.compose.resources.stringResource
+
+import kotlin.math.max
 
 /** Form to input building levels and roof levels, with quick-select buttons */
 @Composable
@@ -55,7 +63,7 @@ fun BuildingLevelsForm(
                 Column(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .width(80.dp),
+                        .width(128.dp),
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.Bottom
                 ) {
@@ -64,22 +72,39 @@ fun BuildingLevelsForm(
                         style = MaterialTheme.typography.caption.copy(hyphens = Hyphens.Auto),
                         color = LocalContentColor.current.copy(alpha = ContentAlpha.medium),
                     )
-                    val levelsString = levels?.toString().orEmpty()
-                    TextField2(
-                        value = levelsString,
-                        onValueChange = { value ->
-                            if (value.isEmpty() || value.isValidLevel()) {
-                                onLevelsChange(value.toIntOrNull())
-                            }
-                        },
-                        modifier = Modifier.padding(bottom = 16.dp),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Next
-                        ),
-                        singleLine = true,
-                        textStyle = MaterialTheme.typography.largeInput,
-                    )
+                    var levelsInputHeightPx by remember { mutableIntStateOf(0) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        val levelsString = levels?.toString().orEmpty()
+                        TextField2(
+                            value = levelsString,
+                            onValueChange = { value ->
+                                if (value.isEmpty() || value.isValidLevel()) {
+                                    onLevelsChange(value.toIntOrNull())
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .onSizeChanged { levelsInputHeightPx = it.height },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Next
+                            ),
+                            singleLine = true,
+                            textStyle = MaterialTheme.typography.largeInput,
+                        )
+                        StepperButton(
+                            onIncrease = { onLevelsChange((levels ?: 1) + 1) },
+                            onDecrease = { onLevelsChange(if (levels == null) 1 else max(1, levels - 1)) },
+                            increaseEnabled = true,
+                            decreaseEnabled = levels == null || levels > 1,
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(levelsInputHeightPx.pxToDp())
+                        )
+                    }
                 }
                 // same height as BuildingLevelsIllustration
                 Spacer(Modifier
@@ -90,27 +115,44 @@ fun BuildingLevelsForm(
                 Column(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .width(80.dp)
+                        .width(128.dp)
                         .padding(top = 16.dp),
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.Top
                 ) {
-                    val roofLevelsString = roofLevels?.toString().orEmpty()
-                    TextField2(
-                        value = roofLevelsString,
-                        onValueChange = { value ->
-                            if (value.isEmpty() || value.isValidLevel()) {
-                                onRoofLevelsChange(value.toIntOrNull())
-                            }
-                        },
-                        modifier = Modifier.padding(bottom = 16.dp),
-                        keyboardOptions = KeyboardOptions.Default.copy(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        singleLine = true,
-                        textStyle = MaterialTheme.typography.largeInput,
-                    )
+                    var roofLevelsInputHeightPx by remember { mutableIntStateOf(0) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        val roofLevelsString = roofLevels?.toString().orEmpty()
+                        TextField2(
+                            value = roofLevelsString,
+                            onValueChange = { value ->
+                                if (value.isEmpty() || value.isValidLevel()) {
+                                    onRoofLevelsChange(value.toIntOrNull())
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .onSizeChanged { roofLevelsInputHeightPx = it.height },
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            singleLine = true,
+                            textStyle = MaterialTheme.typography.largeInput,
+                        )
+                        StepperButton(
+                            onIncrease = { onRoofLevelsChange((roofLevels ?: 1) + 1) },
+                            onDecrease = { onRoofLevelsChange(if (roofLevels == null) 1 else max(0, roofLevels - 1)) },
+                            increaseEnabled = true,
+                            decreaseEnabled = roofLevels == null || roofLevels > 0,
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(roofLevelsInputHeightPx.pxToDp())
+                        )
+                    }
                     Text(
                         text = stringResource(Res.string.quest_buildingLevels_roofLevelsLabel2),
                         textAlign = TextAlign.Start,
