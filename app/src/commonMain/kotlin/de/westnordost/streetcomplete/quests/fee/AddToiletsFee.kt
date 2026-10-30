@@ -1,4 +1,4 @@
-package de.westnordost.streetcomplete.quests.toilets_fee
+package de.westnordost.streetcomplete.quests.fee
 
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.data.meta.CountryInfo
@@ -6,19 +6,15 @@ import de.westnordost.streetcomplete.data.osm.geometry.ElementGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.Element
 import de.westnordost.streetcomplete.data.osm.mapdata.MapDataWithGeometry
 import de.westnordost.streetcomplete.data.osm.mapdata.filter
-import de.westnordost.streetcomplete.data.osm.osmquests.Answer
 import de.westnordost.streetcomplete.data.osm.osmquests.OsmFilterQuestType
 import de.westnordost.streetcomplete.data.osm.osmquests.QuestAction
 import de.westnordost.streetcomplete.data.user.achievements.EditTypeAchievement.CITIZEN
 import de.westnordost.streetcomplete.osm.Tags
 import de.westnordost.streetcomplete.resources.*
-import de.westnordost.streetcomplete.ui.common.quest.AnswerItem
-import de.westnordost.streetcomplete.ui.common.quest.QuestForm
 import de.westnordost.streetcomplete.util.countryboundaries.AllCountriesExcept
 import de.westnordost.streetcomplete.util.ktx.toYesNo
-import org.jetbrains.compose.resources.stringResource
 
-class AddToiletsFee : OsmFilterQuestType<ToiletFeeAnswer>() {
+class AddToiletsFee : OsmFilterQuestType<FeeAnswer>() {
 
     override val elementFilter = """
         nodes, ways, relations with
@@ -37,28 +33,16 @@ class AddToiletsFee : OsmFilterQuestType<ToiletFeeAnswer>() {
     override val achievements = listOf(CITIZEN)
 
     @Composable
-    override fun Form(on: (QuestAction<ToiletFeeAnswer>) -> Unit, element: Element, geometry: ElementGeometry, countryInfo: CountryInfo) {
-        QuestForm(
-            on = on,
-            answers = listOf(
-                AnswerItem(stringResource(Res.string.quest_generic_hasFeature_no)) { on(Answer(ToiletFee(false))) },
-                AnswerItem(stringResource(Res.string.quest_generic_hasFeature_yes)) { on(Answer(ToiletFee(true))) },
-            ),
-            otherAnswers = { listOf(
-                AnswerItem(stringResource(Res.string.quest_toiletsFee_fee_for_non_customers)) {
-                    on(Answer(ToiletFeeForNonCustomers))
-                },
-            ) }
-        )
-    }
+    override fun Form(on: (QuestAction<FeeAnswer>) -> Unit, element: Element, geometry: ElementGeometry, countryInfo: CountryInfo) = AddFeeForm(on)
 
-    override fun applyAnswerTo(answer: ToiletFeeAnswer, tags: Tags, geometry: ElementGeometry, timestampEdited: Long) {
+    override fun applyAnswerTo(answer: FeeAnswer, tags: Tags, geometry: ElementGeometry, timestampEdited: Long) {
         tags.remove("fee:conditional")
         when (answer) {
-            is ToiletFee -> tags["fee"] = answer.fee.toYesNo()
-            is ToiletFeeForNonCustomers -> {
+            is Fee -> tags["fee"] = answer.fee.toYesNo()
+            is FeeForNonCustomers -> {
                 tags["fee"] = "yes"
                 tags["fee:conditional"] = "no @ customers"
+                tags["access"] = "yes"
             }
         }
     }

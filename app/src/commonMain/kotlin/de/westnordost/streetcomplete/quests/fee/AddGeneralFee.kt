@@ -1,4 +1,4 @@
-package de.westnordost.streetcomplete.quests.general_fee
+package de.westnordost.streetcomplete.quests.fee
 
 import androidx.compose.runtime.Composable
 import de.westnordost.streetcomplete.data.meta.CountryInfo
@@ -9,11 +9,10 @@ import de.westnordost.streetcomplete.data.osm.osmquests.QuestAction
 import de.westnordost.streetcomplete.data.user.achievements.EditTypeAchievement.CITIZEN
 import de.westnordost.streetcomplete.osm.Tags
 import de.westnordost.streetcomplete.resources.*
-import de.westnordost.streetcomplete.ui.common.quest.YesNoQuestForm
-import de.westnordost.streetcomplete.util.ktx.toYesNo
 import org.jetbrains.compose.resources.stringResource
+import de.westnordost.streetcomplete.util.ktx.toYesNo
 
-class AddGeneralFee : OsmFilterQuestType<Boolean>() {
+class AddGeneralFee : OsmFilterQuestType<FeeAnswer>() {
 
     // Bicycle charging station are amenity=charging_station with bicycle=yes/designated.
     // We further exclude dual use charging stations as payment may be waived only for cyclists increasing risk of incorrect answers
@@ -55,25 +54,29 @@ class AddGeneralFee : OsmFilterQuestType<Boolean>() {
     override val achievements = listOf(CITIZEN)
 
     @Composable
-    override fun Form(on: (QuestAction<Boolean>) -> Unit, element: Element, geometry: ElementGeometry, countryInfo: CountryInfo) {
-        YesNoQuestForm(
-            on = on,
-            title = stringResource(
-                if (element.tags["amenity"] != null || element.tags["waterway"] != null) {
-                    // Things you must pay to "use"
-                    Res.string.quest_generalFee_title
-                } else if (element.tags["tourism"] == "wilderness_hut" || element.tags["tourism"] == "camp_site" || element.tags["tourism"] == "caravan_site") {
-                    // Places you must pay to "stay at"
-                    Res.string.quest_generalFee_title3
-                } else {
-                    // Places you must pay to "enter"
-                    Res.string.quest_generalFee_title2
-                }
-            ),
-        )
+    override fun Form(on: (QuestAction<FeeAnswer>) -> Unit, element: Element, geometry: ElementGeometry, countryInfo: CountryInfo) {
+        val title = if (element.tags["amenity"] != null || element.tags["waterway"] != null) {
+            // Things you must pay to "use"
+            stringResource(Res.string.quest_generalFee_title)
+        } else if (element.tags["tourism"] == "wilderness_hut" || element.tags["tourism"] == "camp_site" || element.tags["tourism"] == "caravan_site") {
+            // Places you must pay to "stay at"
+            stringResource(Res.string.quest_generalFee_title3)
+        } else {
+            // Places you must pay to "enter"
+            stringResource(Res.string.quest_generalFee_title2)
+        }
+        return AddFeeForm(on, title)
     }
 
-    override fun applyAnswerTo(answer: Boolean, tags: Tags, geometry: ElementGeometry, timestampEdited: Long) {
-        tags["fee"] = answer.toYesNo()
+    override fun applyAnswerTo(answer: FeeAnswer, tags: Tags, geometry: ElementGeometry, timestampEdited: Long) {
+        tags.remove("fee:conditional")
+        when (answer) {
+            is Fee -> tags["fee"] = answer.fee.toYesNo()
+            is FeeForNonCustomers -> {
+                tags["fee"] = "yes"
+                tags["fee:conditional"] = "no @ customers"
+                tags["access"] = "yes"
+            }
+        }
     }
 }
