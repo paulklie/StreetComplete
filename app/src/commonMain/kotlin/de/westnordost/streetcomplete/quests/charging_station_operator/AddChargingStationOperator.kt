@@ -21,7 +21,7 @@ class AddChargingStationOperator : OsmFilterQuestType<String>() {
           and !operator and !name and !brand
           and operator:signed != no
           and brand:signed != no
-          and access !~ private|no
+          and access = yes
     """
     override val changesetComment = "Specify charging station operators"
     override val wikiLink = "Tag:amenity=charging_station"
